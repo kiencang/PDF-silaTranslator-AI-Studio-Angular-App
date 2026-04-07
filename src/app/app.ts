@@ -147,11 +147,11 @@ export class App {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const base64String = (reader.result as string).split(',')[1];
-      this.fileBase64.set(base64String);
-      this.checkTokenLimit(base64String, file.type);
+      const textContent = reader.result as string;
+      this.fileBase64.set(textContent);
+      this.checkTokenLimit(textContent, file.type);
     };
-    reader.readAsDataURL(file);
+    reader.readAsText(file);
   }
 
   private async checkTokenLimit(base64String: string, mimeType: string) {
@@ -226,8 +226,8 @@ export class App {
         const instruction = await this.loadPrompt('system_instructions_phase_2.md');
         const prompt = await this.loadPrompt('prompt_phase_2.md');
         
-        // Decode base64 to string for HTML
-        const htmlContent = decodeURIComponent(escape(atob(base64)));
+        // base64 variable contains raw HTML text for phase 2
+        const htmlContent = base64;
         const result = await this.geminiService.translateHtml(htmlContent, prompt, instruction, temp);
         this.resultHtml.set(this.extractHtml(result));
       }
@@ -252,12 +252,7 @@ export class App {
   private updateIframe() {
     const iframe = document.getElementById('preview-iframe') as HTMLIFrameElement;
     if (iframe && this.resultHtml()) {
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(this.resultHtml()!);
-        doc.close();
-      }
+      iframe.srcdoc = this.resultHtml()!;
     }
   }
 
