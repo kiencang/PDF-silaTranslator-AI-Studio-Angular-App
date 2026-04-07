@@ -9,4 +9,4 @@ Mã nguồn App dịch file PDF từ Anh sang Việt. Triển khai trên AI Stud
 - Đọc hướng dẫn cách dùng ở đây: https://blog.wpsila.com/app-dich-may-tren-ai-studio/
 - Chương trình sử dụng SI/Prompt đã được tối ưu sẵn ở dự án này: https://github.com/kiencang/SI-Prompt-PDF-EV-Translate
 
-`build_an_app` được dùng để khởi tạo app lần đầu, chỉ giữ lại để tham khảo, không cần dùng lại khi đã có app thực tế.
+`build_an_app` được dùng để khởi tạo app lần đầu, chỉ giữ lại để tham khảo (cho người phát triển), không cần dùng lại khi đã có app thực tế. Người dùng cuối không cần quan tâm đến phần này.
