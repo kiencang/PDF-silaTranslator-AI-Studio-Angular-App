@@ -2,11 +2,17 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Copy, Eye, Code, ArrowDown, Trash2, Maximize, Minimize, Clock } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Eye, Code, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 type TranslationMode = 'x_math' | 'x_svg' | 'normal' | 'phase1' | 'phase2';
+
+interface Toast {
+  id: number;
+  type: 'error' | 'info' | 'success';
+  message: string;
+}
 
 @Component({
   selector: 'app-root',
@@ -29,14 +35,15 @@ export class App {
   readonly CheckCircle2 = CheckCircle2;
   readonly AlertCircle = AlertCircle;
   readonly Loader2 = Loader2;
-  readonly Copy = Copy;
   readonly Eye = Eye;
   readonly Code = Code;
   readonly ArrowDown = ArrowDown;
-  readonly Trash2 = Trash2;
+  readonly RefreshCw = RefreshCw;
   readonly Maximize = Maximize;
   readonly Minimize = Minimize;
   readonly Clock = Clock;
+  readonly Info = Info;
+  readonly X = X;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -56,12 +63,15 @@ export class App {
   
   resultHtml = signal<string | null>(null);
   viewMode = signal<'preview' | 'code'>('preview');
-  isCopied = signal<boolean>(false);
   isDragging = signal<boolean>(false);
   tokenCount = signal<number>(0);
   isFullscreen = signal<boolean>(false);
   elapsedTime = signal<number>(0);
   private timerInterval: any;
+  
+  toasts = signal<Toast[]>([]);
+  private toastIdCounter = 0;
+  showResetConfirm = signal<boolean>(false);
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
@@ -73,6 +83,25 @@ export class App {
     const s = (totalSeconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   });
+  
+  highlightedCode = computed(() => {
+    const html = this.resultHtml();
+    if (!html) return '';
+    
+    let escaped = html
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    escaped = escaped.replace(/(&lt;\/?[a-z0-9]+)(.*?)(\/?&gt;)/gi, (match, p1, p2, p3) => {
+      const tag = `<span class="text-pink-400">${p1}</span>`;
+      const attrs = p2.replace(/([a-z0-9-]+)=(&quot;.*?&quot;|&#39;.*?&#39;)/gi, '<span class="text-indigo-300">$1</span>=<span class="text-emerald-300">$2</span>');
+      const end = `<span class="text-pink-400">${p3}</span>`;
+      return tag + attrs + end;
+    });
+
+    return escaped;
+  });
 
   constructor() {
     effect(() => {
@@ -80,6 +109,18 @@ export class App {
         setTimeout(() => this.updateIframe(), 50);
       }
     });
+  }
+
+  showToast(type: 'error' | 'info' | 'success', message: string) {
+    const id = this.toastIdCounter++;
+    this.toasts.update(t => [...t, { id, type, message }]);
+    setTimeout(() => {
+      this.removeToast(id);
+    }, 3000);
+  }
+
+  removeToast(id: number) {
+    this.toasts.update(t => t.filter(toast => toast.id !== id));
   }
 
   onDragOver(event: DragEvent) {
@@ -103,11 +144,12 @@ export class App {
       const file = event.dataTransfer.files[0];
       if (file.type === 'application/pdf') {
          this.handleFile(file);
-      } else if (file.type === 'text/html') {
+      } else if (file.type === 'text/html' || file.name.endsWith('.html')) {
          this.handleHtmlFile(file);
-         this.mode.set('phase2'); // Auto-switch mode
+         this.mode.set('phase2');
+         this.showToast('info', 'Đã tự động chuyển sang Phase 2 do phát hiện file HTML.');
       } else {
-         this.error.set('Vui lòng tải lên tệp PDF hoặc HTML.');
+         this.showToast('error', 'Vui lòng tải lên tệp PDF hoặc HTML.');
       }
     }
   }
@@ -118,11 +160,12 @@ export class App {
       const file = input.files[0];
       if (file.type === 'application/pdf') {
          this.handleFile(file);
-      } else if (file.type === 'text/html') {
+      } else if (file.type === 'text/html' || file.name.endsWith('.html')) {
          this.handleHtmlFile(file);
-         this.mode.set('phase2'); // Auto-switch mode
+         this.mode.set('phase2');
+         this.showToast('info', 'Đã tự động chuyển sang Phase 2 do phát hiện file HTML.');
       } else {
-         this.error.set('Vui lòng tải lên tệp PDF hoặc HTML.');
+         this.showToast('error', 'Vui lòng tải lên tệp PDF hoặc HTML.');
       }
     }
     // Reset giá trị của input để cho phép chọn lại cùng một file
@@ -131,14 +174,14 @@ export class App {
 
   private handleFile(file: File) {
     if (file.type !== 'application/pdf') {
-      this.error.set('Vui lòng tải lên tệp PDF.');
+      this.showToast('error', 'Vui lòng tải lên tệp PDF.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
     }
     
     if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
-      this.error.set('Tệp tin quá lớn. Vui lòng tải lên tệp tin có dung lượng nhỏ hơn 5MB.');
+      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 5MB.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
@@ -160,7 +203,7 @@ export class App {
 
   private handleHtmlFile(file: File) {
     if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
-      this.error.set('Tệp tin quá lớn. Vui lòng tải lên tệp tin có dung lượng nhỏ hơn 5MB.');
+      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 5MB.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
@@ -185,13 +228,13 @@ export class App {
       const tokens = await this.geminiService.countTokens(base64String, mimeType);
       this.tokenCount.set(tokens);
       if (tokens > this.MAX_TOKENS) {
-        this.error.set(`Warning: Tài liệu quá lớn (${tokens} tokens). Lượng tokens tối đa của file đầu vào được phép là 25,000 tokens.`);
+        this.showToast('error', `Lỗi: Nội dung vượt quá giới hạn 25.000 tokens (${tokens} tokens).`);
         this.selectedFile.set(null);
         this.fileBase64.set(null);
       }
     } catch (e) {
       console.error('Không thể đếm token', e);
-      this.error.set('Lỗi khi kiểm tra dung lượng tài liệu. Vui lòng kiểm tra kết nối mạng và thử lại.');
+      this.showToast('error', 'Lỗi khi kiểm tra dung lượng tài liệu. Vui lòng thử lại.');
     }
   }
 
@@ -281,21 +324,22 @@ export class App {
       }
 
       this.progressMessage.set('Done!');
+      this.showToast('success', 'Quá trình dịch tài liệu hoàn tất!');
     } catch (e: any) {
       console.error(e);
       const errorMessage = e.message || '';
       
       if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('quota')) {
-        this.error.set('Hệ thống AI đang quá tải hoặc đã hết lượt sử dụng miễn phí hôm nay. Vui lòng thử lại sau.');
+        this.showToast('error', 'Lỗi: Hệ thống AI đang quá tải hoặc đã hết lượt sử dụng.');
       } 
       else if (errorMessage.includes('503') || errorMessage.toLowerCase().includes('overloaded')) {
-        this.error.set('Máy chủ AI của Google hiện đang bận. Vui lòng chờ vài phút rồi thử lại.');
+        this.showToast('error', 'Lỗi: Máy chủ AI hiện đang bận. Vui lòng thử lại sau.');
       }
       else if (errorMessage.toLowerCase().includes('safety') || errorMessage.toLowerCase().includes('blocked')) {
-        this.error.set('Tài liệu của bạn bị AI từ chối xử lý do nghi ngờ chứa nội dung vi phạm chính sách an toàn.');
+        this.showToast('error', 'Lỗi: Tài liệu bị từ chối do nghi ngờ vi phạm chính sách an toàn.');
       }
       else {
-        this.error.set('Đã xảy ra lỗi kết nối với AI. Vui lòng thử lại.');
+        this.showToast('error', `Lỗi: ${errorMessage || 'Đã xảy ra lỗi kết nối với AI'}`);
       }
     } finally {
       this.isProcessing.set(false);
@@ -320,15 +364,15 @@ export class App {
     }
   }
 
-  copyToClipboard() {
+  resetApp() {
     if (this.resultHtml()) {
-      navigator.clipboard.writeText(this.resultHtml()!);
-      this.isCopied.set(true);
-      setTimeout(() => this.isCopied.set(false), 2000);
+      this.showResetConfirm.set(true);
+    } else {
+      this.confirmReset();
     }
   }
 
-  resetApp() {
+  confirmReset() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
@@ -340,6 +384,12 @@ export class App {
     this.progressMessage.set('');
     this.elapsedTime.set(0);
     this.isFullscreen.set(false);
+    this.showResetConfirm.set(false);
+    this.showToast('info', 'Đã làm mới phiên làm việc.');
+  }
+
+  cancelReset() {
+    this.showResetConfirm.set(false);
   }
 
   downloadHtml() {
@@ -353,6 +403,7 @@ export class App {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      this.showToast('success', 'Đã tải file HTML xuống máy.');
     }
   }
 }
