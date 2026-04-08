@@ -116,7 +116,7 @@ export class App {
     this.toasts.update(t => [...t, { id, type, message }]);
     setTimeout(() => {
       this.removeToast(id);
-    }, 3000);
+    }, 5000);
   }
 
   removeToast(id: number) {
@@ -324,7 +324,11 @@ export class App {
       }
 
       this.progressMessage.set('Done!');
-      this.showToast('success', 'Quá trình dịch tài liệu hoàn tất!');
+      if (currentMode === 'phase1') {
+        this.showToast('success', 'Quá trình chuyển đổi tài liệu hoàn tất!');
+      } else {
+        this.showToast('success', 'Quá trình dịch tài liệu hoàn tất!');
+      }
     } catch (e: any) {
       console.error(e);
       const errorMessage = e.message || '';
@@ -398,7 +402,8 @@ export class App {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${this.selectedFile()?.name.replace(/\.[^/.]+$/, "") || 'document'}_translated.html`;
+      const suffix = this.mode() === 'phase1' ? '_converted' : '_translated';
+      a.download = `${this.selectedFile()?.name.replace(/\.[^/.]+$/, "") || 'document'}${suffix}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

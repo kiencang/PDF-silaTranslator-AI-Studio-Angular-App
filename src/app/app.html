@@ -4,11 +4,11 @@
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <div class="bg-indigo-600 text-white p-1.5 rounded-lg">
-          <lucide-icon [img]="FileText" class="w-5 h-5"></lucide-icon>
+          <lucide-icon [img]="FileText" class="w-5 h-5" aria-hidden="true"></lucide-icon>
         </div>
-        <h1 class="text-xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.9</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.10</h1>
       </div>
-      <div class="flex items-center gap-4 text-sm text-slate-500">
+      <div class="flex items-center gap-4 text-sm text-slate-600">
         <span>Powered by Gemini 3.1 Pro</span>
       </div>
     </div>
@@ -25,14 +25,17 @@
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">1. Tải lên tài liệu cần dịch</h2>
             @if (hasFile() || resultHtml()) {
-              <button (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50">
-                <lucide-icon [img]="RefreshCw" class="w-3.5 h-3.5"></lucide-icon> Làm mới
+              <button (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <lucide-icon [img]="RefreshCw" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon> Làm mới
               </button>
             }
           </div>
           <div class="p-6">
             <div 
-              class="border-2 rounded-xl p-8 text-center transition-all duration-200 cursor-pointer"
+              role="button"
+              tabindex="0"
+              aria-label="Khu vực tải lên tài liệu. Nhấn Enter hoặc Space để chọn file"
+              class="border-2 rounded-xl p-8 text-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               [class.border-dashed]="!isDragging()"
               [class.border-solid]="isDragging()"
               [class.border-slate-300]="!isDragging()"
@@ -44,6 +47,8 @@
               (dragleave)="onDragLeave($event)"
               (drop)="onDropOverride($event)"
               (click)="fileInput.click()"
+              (keydown.enter)="fileInput.click()"
+              (keydown.space)="fileInput.click(); $event.preventDefault()"
             >
               <input 
                 type="file" 
@@ -56,27 +61,27 @@
               @if (!hasFile()) {
                 <div class="flex flex-col items-center gap-3">
                   <div class="p-3 bg-indigo-50 text-indigo-600 rounded-full">
-                    <lucide-icon [img]="UploadCloud" class="w-6 h-6"></lucide-icon>
+                    <lucide-icon [img]="UploadCloud" class="w-6 h-6" aria-hidden="true"></lucide-icon>
                   </div>
                   <div>
                     <p class="text-sm font-medium text-slate-900">Click vào để tải lên tài liệu hoặc kéo thả vào đây</p>
-                    <p class="text-xs text-slate-500 mt-1">PDF hoặc HTML (tối đa 5MB / 15 trang / 25K Token đầu vào)</p>
+                    <p class="text-xs text-slate-600 mt-1">PDF hoặc HTML (tối đa 5MB / 15 trang / 25K Token đầu vào)</p>
                   </div>
                 </div>
               } @else {
                 <div class="flex flex-col items-center gap-3 w-full">
                   <div class="p-3 bg-emerald-50 text-emerald-600 rounded-full">
-                    <lucide-icon [img]="CheckCircle2" class="w-6 h-6"></lucide-icon>
+                    <lucide-icon [img]="CheckCircle2" class="w-6 h-6" aria-hidden="true"></lucide-icon>
                   </div>
                   <div class="text-center w-full">
                     <p class="text-sm font-medium text-slate-900 truncate max-w-[200px] mx-auto">{{ selectedFile()?.name }}</p>
-                    <p class="text-xs text-slate-500 mt-1">{{ (selectedFile()!.size / 1024 / 1024).toFixed(2) }} MB</p>
+                    <p class="text-xs text-slate-600 mt-1">{{ (selectedFile()!.size / 1024 / 1024).toFixed(2) }} MB</p>
                   </div>
                   
                   @if (tokenCount() > 0) {
                     <div class="w-full max-w-[240px] mt-2">
                       <div class="flex justify-between text-[10px] uppercase tracking-wider font-semibold mb-1.5">
-                        <span class="text-slate-500">Token Usage</span>
+                        <span class="text-slate-600">Token Usage</span>
                         <span [class.text-emerald-600]="tokenCount() < 20000" [class.text-amber-500]="tokenCount() >= 20000 && tokenCount() <= 25000" [class.text-red-600]="tokenCount() > 25000">
                           {{ tokenCount() }} / 25K
                         </span>
@@ -99,8 +104,8 @@
             </div>
 
             @if (error()) {
-              <div class="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-start gap-2">
-                <lucide-icon [img]="AlertCircle" class="w-4 h-4 mt-0.5 shrink-0"></lucide-icon>
+              <div class="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-start gap-2" role="alert" aria-live="assertive">
+                <lucide-icon [img]="AlertCircle" class="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true"></lucide-icon>
                 <span>{{ error() }}</span>
               </div>
             }
@@ -110,7 +115,7 @@
         <!-- Configuration Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-            <lucide-icon [img]="Settings" class="w-4 h-4 text-slate-500"></lucide-icon>
+            <lucide-icon [img]="Settings" class="w-4 h-4 text-slate-500" aria-hidden="true"></lucide-icon>
             <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">2. Cấu hình</h2>
           </div>
           <div class="p-6 space-y-5">
@@ -125,7 +130,7 @@
                   <input type="radio" name="mode" value="x_math" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Không công thức toán / Không biểu đồ toán</div>
-                    <div class="text-xs text-slate-500 mt-0.5">PDF -> HTML (VI). <strong>Thích hợp cho tài liệu khoa học xã hội</strong>.</div>
+                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). <strong>Thích hợp cho tài liệu khoa học xã hội</strong>.</div>
                   </div>
                 </label>
 
@@ -135,7 +140,7 @@
                   <input type="radio" name="mode" value="x_svg" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Có công thức toán / Không biểu đồ toán</div>
-                    <div class="text-xs text-slate-500 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học, có công thức toán nhưng không sơ đồ toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
+                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học, có công thức toán nhưng không sơ đồ toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
                   </div>
                 </label>
 
@@ -145,12 +150,12 @@
                   <input type="radio" name="mode" value="normal" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Có công thức toán / Có biểu đồ toán</div>
-                    <div class="text-xs text-slate-500 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học phức tạp, có công thức toán và cả sơ đồ toán. <strong>Phù hợp nhất cho tài liệu toán học, sách toán</strong>.</div>
+                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học phức tạp, có công thức toán và cả sơ đồ toán. <strong>Phù hợp nhất cho tài liệu toán học, sách toán</strong>.</div>
                   </div>
                 </label>                
 
                 <div class="relative p-3 border border-slate-200 rounded-xl bg-slate-50/50 space-y-2">
-                  <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 ml-1">Dịch 2 giai đoạn [cho nội dung rất phức tạp]</div>
+                  <div class="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1 ml-1">Dịch 2 giai đoạn [cho nội dung rất phức tạp]</div>
                   
                   <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors bg-white hover:bg-slate-50"
                          [class.border-indigo-600]="mode() === 'phase1'"
@@ -159,13 +164,13 @@
                     <input type="radio" name="mode" value="phase1" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 1: PDF sang HTML (EN)</div>
-                      <div class="text-xs text-slate-500 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
+                      <div class="text-xs text-slate-600 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
                     </div>
                   </label>
 
                   <div class="flex justify-center -my-3 relative z-10">
                     <div class="bg-white px-2 py-1 rounded-full border border-slate-200 shadow-sm text-slate-400">
-                      <lucide-icon [img]="ArrowDown" class="w-3 h-3"></lucide-icon>
+                      <lucide-icon [img]="ArrowDown" class="w-3 h-3" aria-hidden="true"></lucide-icon>
                     </div>
                   </div>
 
@@ -176,7 +181,7 @@
                     <input type="radio" name="mode" value="phase2" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 2: HTML (EN) sang HTML (VI)</div>
-                      <div class="text-xs text-slate-500 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
+                      <div class="text-xs text-slate-600 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
                     </div>
                   </label>
                 </div>
@@ -187,7 +192,7 @@
             <div class="space-y-2 pt-2" [class.opacity-50]="isProcessing()" [class.pointer-events-none]="isProcessing()">
               <div class="flex justify-between items-center">
                 <label class="block text-sm font-medium text-slate-700">Temperature</label>
-                <span class="text-xs font-mono text-slate-500">{{ temperature() }}</span>
+                <span class="text-xs font-mono text-slate-600">{{ temperature() }}</span>
               </div>
               <input type="range" min="0.1" max="0.5" step="0.1" [ngModel]="temperature()" (ngModelChange)="temperature.set($event)" class="w-full accent-indigo-600">
               <div class="flex justify-between text-xs text-slate-400">
@@ -200,19 +205,19 @@
             <button 
               (click)="processFile()"
               [disabled]="!canProcess()"
-              class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
+              class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               @if (isProcessing()) {
-                <lucide-icon [img]="Loader2" class="w-5 h-5 animate-spin"></lucide-icon>
+                <lucide-icon [img]="Loader2" class="w-5 h-5 animate-spin" aria-hidden="true"></lucide-icon>
                 <span>Đang xử lý...</span>
               } @else {
-                <lucide-icon [img]="Play" class="w-5 h-5"></lucide-icon>
+                <lucide-icon [img]="Play" class="w-5 h-5" aria-hidden="true"></lucide-icon>
                 <span>Start Translation</span>
               }
             </button>
 
             @if (isProcessing()) {
-              <p class="text-center text-sm text-indigo-600 font-medium animate-pulse">
+              <p class="text-center text-sm text-indigo-600 font-medium animate-pulse" aria-live="polite">
                 {{ progressMessage() }}
               </p>
             }
@@ -236,40 +241,40 @@
                 <div class="flex bg-slate-200 p-1 rounded-lg mr-2">
                   <button 
                     (click)="viewMode.set('preview')"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     [class.bg-white]="viewMode() === 'preview'"
                     [class.shadow-sm]="viewMode() === 'preview'"
                     [class.text-slate-900]="viewMode() === 'preview'"
                     [class.text-slate-600]="viewMode() !== 'preview'"
                     [class.hover:text-slate-900]="viewMode() !== 'preview'"
                   >
-                    <lucide-icon [img]="Eye" class="w-3.5 h-3.5"></lucide-icon>
+                    <lucide-icon [img]="Eye" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
                     Preview
                   </button>
                   <button 
                     (click)="viewMode.set('code')"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     [class.bg-white]="viewMode() === 'code'"
                     [class.shadow-sm]="viewMode() === 'code'"
                     [class.text-slate-900]="viewMode() === 'code'"
                     [class.text-slate-600]="viewMode() !== 'code'"
                     [class.hover:text-slate-900]="viewMode() !== 'code'"
                   >
-                    <lucide-icon [img]="Code" class="w-3.5 h-3.5"></lucide-icon>
+                    <lucide-icon [img]="Code" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
                     Code
                   </button>
                 </div>
 
-                <button (click)="downloadHtml()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium shadow-sm" title="Download HTML">
-                  <lucide-icon [img]="Download" class="w-3.5 h-3.5"></lucide-icon>
+                <button (click)="downloadHtml()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Download HTML">
+                  <lucide-icon [img]="Download" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
                   Download
                 </button>
                 <div class="w-px h-6 bg-slate-200 mx-1"></div>
-                <button (click)="isFullscreen.set(!isFullscreen())" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" [title]="isFullscreen() ? 'Thu nhỏ' : 'Toàn màn hình'">
+                <button (click)="isFullscreen.set(!isFullscreen())" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" [title]="isFullscreen() ? 'Thu nhỏ' : 'Toàn màn hình'" [attr.aria-label]="isFullscreen() ? 'Thu nhỏ' : 'Toàn màn hình'">
                   @if (isFullscreen()) {
-                    <lucide-icon [img]="Minimize" class="w-4 h-4"></lucide-icon>
+                    <lucide-icon [img]="Minimize" class="w-4 h-4" aria-hidden="true"></lucide-icon>
                   } @else {
-                    <lucide-icon [img]="Maximize" class="w-4 h-4"></lucide-icon>
+                    <lucide-icon [img]="Maximize" class="w-4 h-4" aria-hidden="true"></lucide-icon>
                   }
                 </button>
               </div>
@@ -282,10 +287,10 @@
               <div class="absolute inset-0 bg-white z-10 flex flex-col">
                 <!-- Overlay with spinner -->
                 <div class="absolute inset-0 flex flex-col items-center justify-center bg-white/40 z-20">
-                  <lucide-icon [img]="Loader2" class="w-10 h-10 text-indigo-600 animate-spin mb-4"></lucide-icon>
+                  <lucide-icon [img]="Loader2" class="w-10 h-10 text-indigo-600 animate-spin mb-4" aria-hidden="true"></lucide-icon>
                   <p class="text-slate-900 font-medium">{{ progressMessage() }}</p>
                   <div class="mt-3 px-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm flex items-center gap-2 text-indigo-600 font-mono font-medium text-sm">
-                    <lucide-icon [img]="Clock" class="w-4 h-4"></lucide-icon>
+                    <lucide-icon [img]="Clock" class="w-4 h-4" aria-hidden="true"></lucide-icon>
                     {{ formattedTime() }}
                   </div>
                   <p class="text-slate-500 text-sm mt-4 max-w-md text-center">Thời gian thao tác sẽ cần từ 3 cho đến khoảng 6 phút, tùy thuộc vào độ dài và mức độ phức tạp của nội dung.</p>
@@ -309,7 +314,7 @@
 
             @if (!resultHtml() && !isProcessing()) {
               <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                <lucide-icon [img]="FileText" class="w-16 h-16 mb-4 opacity-20"></lucide-icon>
+                <lucide-icon [img]="FileText" class="w-16 h-16 mb-4 opacity-20" aria-hidden="true"></lucide-icon>
                 <p>Kết quả dịch/chuyển đổi của bạn sẽ được hiển thị ở đây, bạn có thể tải kết quả về để lưu trữ.</p>
               </div>
             }
@@ -317,7 +322,7 @@
             @if (resultHtml()) {
               <div class="absolute inset-0 overflow-hidden">
                 @if (viewMode() === 'preview') {
-                  <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts"></iframe>
+                  <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts" title="Bản xem trước tài liệu đã dịch"></iframe>
                 } @else {
                   <div class="w-full h-full overflow-auto p-4 bg-slate-900 text-slate-300 font-mono text-sm leading-relaxed">
                     <pre><code [innerHTML]="highlightedCode()"></code></pre>
@@ -335,7 +340,7 @@
   <!-- Footer -->
   <footer class="border-t border-slate-200 mt-8">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-center">
-      <p class="text-sm text-slate-500">
+      <p class="text-sm text-slate-600">
         <a href="https://blog.wpsila.com/app-dich-may-tren-ai-studio/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 hover:underline font-medium transition-colors">
           Hướng dẫn sử dụng
         </a> • Nguyễn Đức Anh • contact@wpsila.com
@@ -344,7 +349,7 @@
   </footer>
 
   <!-- Toast Notifications -->
-  <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+  <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none" aria-live="polite" aria-atomic="true">
     @for (toast of toasts(); track toast.id) {
       <div class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border bg-white min-w-[300px] max-w-md animate-in slide-in-from-right-8 fade-in duration-300"
            [class.border-red-200]="toast.type === 'error'"
@@ -363,8 +368,8 @@
           {{ toast.message }}
         </p>
         
-        <button (click)="removeToast(toast.id)" class="shrink-0 p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-          <lucide-icon [img]="X" class="w-4 h-4"></lucide-icon>
+        <button (click)="removeToast(toast.id)" class="shrink-0 p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400" aria-label="Đóng thông báo">
+          <lucide-icon [img]="X" class="w-4 h-4" aria-hidden="true"></lucide-icon>
         </button>
       </div>
     }
@@ -372,20 +377,20 @@
 
   <!-- Reset Confirmation Modal -->
   @if (showResetConfirm()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
       <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
         <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-4 mx-auto">
-          <lucide-icon [img]="AlertCircle" class="w-6 h-6"></lucide-icon>
+          <lucide-icon [img]="AlertCircle" class="w-6 h-6" aria-hidden="true"></lucide-icon>
         </div>
-        <h3 class="text-lg font-semibold text-slate-900 text-center mb-2">Xác nhận làm mới</h3>
-        <p class="text-slate-500 text-sm text-center mb-6">
+        <h3 id="modal-title" class="text-lg font-semibold text-slate-900 text-center mb-2">Xác nhận làm mới</h3>
+        <p id="modal-desc" class="text-slate-500 text-sm text-center mb-6">
           Bạn có chắc chắn muốn xóa kết quả hiện tại không? Dữ liệu chưa lưu sẽ bị mất.
         </p>
         <div class="flex gap-3">
-          <button (click)="cancelReset()" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+          <button (click)="cancelReset()" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400">
             Hủy bỏ
           </button>
-          <button (click)="confirmReset()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors">
+          <button (click)="confirmReset()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
             Đồng ý
           </button>
         </div>
