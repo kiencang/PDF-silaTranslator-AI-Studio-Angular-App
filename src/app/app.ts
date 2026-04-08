@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
 import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Eye, Code, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
@@ -17,7 +17,7 @@ interface Toast {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +54,9 @@ export class App {
   fileBase64 = signal<string | null>(null);
   mimeType = signal<string>('');
   
+  modeControl = new FormControl<TranslationMode>('x_svg', { nonNullable: true });
+  temperatureControl = new FormControl<number>(0.3, { nonNullable: true });
+
   mode = signal<TranslationMode>('x_svg');
   temperature = signal<number>(0.3);
   
@@ -104,6 +107,9 @@ export class App {
   });
 
   constructor() {
+    this.modeControl.valueChanges.subscribe(val => this.mode.set(val));
+    this.temperatureControl.valueChanges.subscribe(val => this.temperature.set(val));
+
     effect(() => {
       if (this.resultHtml() && this.viewMode() === 'preview') {
         setTimeout(() => this.updateIframe(), 50);
@@ -146,7 +152,7 @@ export class App {
          this.handleFile(file);
       } else if (file.type === 'text/html' || file.name.endsWith('.html')) {
          this.handleHtmlFile(file);
-         this.mode.set('phase2');
+         this.modeControl.setValue('phase2');
          this.showToast('info', 'Đã tự động chuyển sang Phase 2 do phát hiện file HTML.');
       } else {
          this.showToast('error', 'Vui lòng tải lên tệp PDF hoặc HTML.');
@@ -162,7 +168,7 @@ export class App {
          this.handleFile(file);
       } else if (file.type === 'text/html' || file.name.endsWith('.html')) {
          this.handleHtmlFile(file);
-         this.mode.set('phase2');
+         this.modeControl.setValue('phase2');
          this.showToast('info', 'Đã tự động chuyển sang Phase 2 do phát hiện file HTML.');
       } else {
          this.showToast('error', 'Vui lòng tải lên tệp PDF hoặc HTML.');

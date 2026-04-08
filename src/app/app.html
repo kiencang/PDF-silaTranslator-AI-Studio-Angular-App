@@ -6,7 +6,7 @@
         <div class="bg-indigo-600 text-white p-1.5 rounded-lg">
           <lucide-icon [img]="FileText" class="w-5 h-5" aria-hidden="true"></lucide-icon>
         </div>
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.10</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.11</h1>
       </div>
       <div class="flex items-center gap-4 text-sm text-slate-600">
         <span>Powered by Gemini 3.1 Pro</span>
@@ -127,7 +127,7 @@
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'x_math'"
                        [class.bg-indigo-50]="mode() === 'x_math'">
-                  <input type="radio" name="mode" value="x_math" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="x_math" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Không công thức toán / Không biểu đồ toán</div>
                     <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). <strong>Thích hợp cho tài liệu khoa học xã hội</strong>.</div>
@@ -137,7 +137,7 @@
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'x_svg'"
                        [class.bg-indigo-50]="mode() === 'x_svg'">
-                  <input type="radio" name="mode" value="x_svg" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="x_svg" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Có công thức toán / Không biểu đồ toán</div>
                     <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học, có công thức toán nhưng không sơ đồ toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
@@ -147,7 +147,7 @@
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'normal'"
                        [class.bg-indigo-50]="mode() === 'normal'">
-                  <input type="radio" name="mode" value="normal" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="normal" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Có công thức toán / Có biểu đồ toán</div>
                     <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Tài liệu khoa học phức tạp, có công thức toán và cả sơ đồ toán. <strong>Phù hợp nhất cho tài liệu toán học, sách toán</strong>.</div>
@@ -161,7 +161,7 @@
                          [class.border-indigo-600]="mode() === 'phase1'"
                          [class.ring-1]="mode() === 'phase1'"
                          [class.ring-indigo-600]="mode() === 'phase1'">
-                    <input type="radio" name="mode" value="phase1" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                    <input type="radio" name="mode" value="phase1" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 1: PDF sang HTML (EN)</div>
                       <div class="text-xs text-slate-600 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
@@ -178,7 +178,7 @@
                          [class.border-indigo-600]="mode() === 'phase2'"
                          [class.ring-1]="mode() === 'phase2'"
                          [class.ring-indigo-600]="mode() === 'phase2'">
-                    <input type="radio" name="mode" value="phase2" [ngModel]="mode()" (ngModelChange)="mode.set($event)" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                    <input type="radio" name="mode" value="phase2" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 2: HTML (EN) sang HTML (VI)</div>
                       <div class="text-xs text-slate-600 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
@@ -194,7 +194,7 @@
                 <label class="block text-sm font-medium text-slate-700">Temperature</label>
                 <span class="text-xs font-mono text-slate-600">{{ temperature() }}</span>
               </div>
-              <input type="range" min="0.1" max="0.5" step="0.1" [ngModel]="temperature()" (ngModelChange)="temperature.set($event)" class="w-full accent-indigo-600">
+              <input type="range" min="0.1" max="0.5" step="0.1" [formControl]="temperatureControl" class="w-full accent-indigo-600">
               <div class="flex justify-between text-xs text-slate-400">
                 <span>Chặt chẽ</span>
                 <span>Sáng tạo</span>
