@@ -34,6 +34,10 @@ export class App {
   readonly Code = Code;
   readonly ArrowDown = ArrowDown;
 
+  readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  readonly MAX_TOKENS = 25000;
+  private promptCache = new Map<string, string>();
+
   // State
   selectedFile = signal<File | null>(null);
   fileBase64 = signal<string | null>(null);
@@ -48,6 +52,7 @@ export class App {
   
   resultHtml = signal<string | null>(null);
   viewMode = signal<'preview' | 'code'>('preview');
+  isCopied = signal<boolean>(false);
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
@@ -114,11 +119,15 @@ export class App {
   private handleFile(file: File) {
     if (file.type !== 'application/pdf') {
       this.error.set('Vui lòng tải lên tệp PDF.');
+      this.selectedFile.set(null);
+      this.fileBase64.set(null);
       return;
     }
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
       this.error.set('Tệp tin quá lớn. Vui lòng tải lên tệp tin có dung lượng nhỏ hơn 5MB.');
+      this.selectedFile.set(null);
+      this.fileBase64.set(null);
       return;
     }
 
@@ -137,8 +146,10 @@ export class App {
   }
 
   private handleHtmlFile(file: File) {
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
       this.error.set('Tệp tin quá lớn. Vui lòng tải lên tệp tin có dung lượng nhỏ hơn 5MB.');
+      this.selectedFile.set(null);
+      this.fileBase64.set(null);
       return;
     }
 
@@ -159,7 +170,7 @@ export class App {
   private async checkTokenLimit(base64String: string, mimeType: string) {
     try {
       const tokens = await this.geminiService.countTokens(base64String, mimeType);
-      if (tokens > 25000) {
+      if (tokens > this.MAX_TOKENS) {
         this.error.set(`Warning: Tài liệu quá lớn (${tokens} tokens). Lượng tokens tối đa của file đầu vào được phép là 25,000 tokens.`);
         this.selectedFile.set(null);
         this.fileBase64.set(null);
@@ -171,8 +182,13 @@ export class App {
   }
 
   async loadPrompt(filename: string): Promise<string> {
+    if (this.promptCache.has(filename)) {
+      return this.promptCache.get(filename)!;
+    }
     try {
-      return await firstValueFrom(this.http.get(`/prompts/${filename}`, { responseType: 'text' }));
+      const content = await firstValueFrom(this.http.get(`/prompts/${filename}`, { responseType: 'text' }));
+      this.promptCache.set(filename, content);
+      return content;
     } catch (e) {
       console.error(`Không thể tải prompt ${filename}`, e);
       throw new Error(`Không thể tải system instruction: ${filename}`);
@@ -194,29 +210,37 @@ export class App {
 
       if (currentMode === 'x_math') {
         this.progressMessage.set('Dịch PDF sang HTML (Không công thức toán / Không biểu đồ toán)...');
-        const instruction = await this.loadPrompt('system_instructions_x_math.md');
-        const prompt = await this.loadPrompt('prompt_x_math.md');
+        const [instruction, prompt] = await Promise.all([
+          this.loadPrompt('system_instructions_x_math.md'),
+          this.loadPrompt('prompt_x_math.md')
+        ]);
         const result = await this.geminiService.translate(base64, mime, prompt, instruction, temp);
         this.resultHtml.set(this.extractHtml(result));
       }
       else if (currentMode === 'x_svg') {
         this.progressMessage.set('Dịch PDF sang HTML (Có công thức toán học / Không biểu đồ toán)...');
-        const instruction = await this.loadPrompt('system_instructions_x_svg.md');
-        const prompt = await this.loadPrompt('prompt_x_svg.md');
+        const [instruction, prompt] = await Promise.all([
+          this.loadPrompt('system_instructions_x_svg.md'),
+          this.loadPrompt('prompt_x_svg.md')
+        ]);
         const result = await this.geminiService.translate(base64, mime, prompt, instruction, temp);
         this.resultHtml.set(this.extractHtml(result));
       }
       else if (currentMode === 'normal') {
         this.progressMessage.set('Dịch PDF sang HTML (Có công thức toán học / Có biểu đồ toán)...');
-        const instruction = await this.loadPrompt('system_instructions.md');
-        const prompt = await this.loadPrompt('prompt.md');
+        const [instruction, prompt] = await Promise.all([
+          this.loadPrompt('system_instructions.md'),
+          this.loadPrompt('prompt.md')
+        ]);
         const result = await this.geminiService.translate(base64, mime, prompt, instruction, temp);
         this.resultHtml.set(this.extractHtml(result));
       }
       else if (currentMode === 'phase1') {
         this.progressMessage.set('Chuyển PDF sang HTML (English)...');
-        const instruction = await this.loadPrompt('system_instructions_phase_1.md');
-        const prompt = await this.loadPrompt('prompt_phase_1.md');
+        const [instruction, prompt] = await Promise.all([
+          this.loadPrompt('system_instructions_phase_1.md'),
+          this.loadPrompt('prompt_phase_1.md')
+        ]);
         const result = await this.geminiService.translate(base64, mime, prompt, instruction, temp);
         this.resultHtml.set(this.extractHtml(result));
       }
@@ -226,8 +250,10 @@ export class App {
         }
         
         this.progressMessage.set('Dịch HTML sang Tiếng Việt...');
-        const instruction = await this.loadPrompt('system_instructions_phase_2.md');
-        const prompt = await this.loadPrompt('prompt_phase_2.md');
+        const [instruction, prompt] = await Promise.all([
+          this.loadPrompt('system_instructions_phase_2.md'),
+          this.loadPrompt('prompt_phase_2.md')
+        ]);
         
         // base64 variable contains raw HTML text for phase 2
         const htmlContent = base64;
@@ -275,6 +301,8 @@ export class App {
   copyToClipboard() {
     if (this.resultHtml()) {
       navigator.clipboard.writeText(this.resultHtml()!);
+      this.isCopied.set(true);
+      setTimeout(() => this.isCopied.set(false), 2000);
     }
   }
 
