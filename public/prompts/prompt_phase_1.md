@@ -12,6 +12,7 @@ Hãy gọi lại và áp dụng tuyệt đối **"Thứ tự Ưu tiên KHÔNG TH
 *	**Cột & Layout:** Ép luồng văn bản chính về **1 CỘT DUY NHẤT**.
 *	**Bảng biểu:** BẮT BUỘC bọc mọi `<table>` bằng `<div class="table-wrapper">` (áp dụng CSS cơ sở trong SI) để chống tràn ngang.
 *	**Công thức Toán học:** Phải dùng cú pháp LaTeX `\(\)` và `\[\]`. BẮT BUỘC nhúng thẻ `<script>` MathJax vào `<head>`. (Giữ nguyên dấu chấm `.` thập phân bên trong block LaTeX).
+*	**TUYỆT ĐỐI KHÔNG** bọc các cú pháp LaTeX (cả `\( \)` và `\[ \]`) bên trong các thẻ HTML như `<code>` hay `<pre>`.
 *	**Tài liệu tham khảo (References):** Giữ nguyên định dạng gốc.
 *	**Hình ảnh:** Thẻ `<img>` phải có `alt` text tiếng Anh có ý nghĩa.
 *	**Xử lý "câu gãy" do PDF (Line breaks):** Tự động nhận diện và ghép nối (merge) các câu bị ngắt dòng vật lý do giới hạn trang PDF thành một câu hoàn chỉnh trong thẻ `<p>`.
