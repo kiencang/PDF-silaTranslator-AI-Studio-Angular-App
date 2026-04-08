@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Copy, Eye, Code, ArrowDown, Trash2 } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Copy, Eye, Code, ArrowDown, Trash2, Maximize, Minimize, Clock } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -34,6 +34,9 @@ export class App {
   readonly Code = Code;
   readonly ArrowDown = ArrowDown;
   readonly Trash2 = Trash2;
+  readonly Maximize = Maximize;
+  readonly Minimize = Minimize;
+  readonly Clock = Clock;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -56,11 +59,20 @@ export class App {
   isCopied = signal<boolean>(false);
   isDragging = signal<boolean>(false);
   tokenCount = signal<number>(0);
+  isFullscreen = signal<boolean>(false);
+  elapsedTime = signal<number>(0);
+  private timerInterval: any;
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
   canProcess = computed(() => this.hasFile() && !this.isProcessing());
   tokenPercentage = computed(() => Math.min((this.tokenCount() / this.MAX_TOKENS) * 100, 100));
+  formattedTime = computed(() => {
+    const totalSeconds = this.elapsedTime();
+    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  });
 
   constructor() {
     effect(() => {
@@ -203,6 +215,11 @@ export class App {
     this.isProcessing.set(true);
     this.error.set(null);
     this.resultHtml.set(null);
+    this.elapsedTime.set(0);
+    
+    this.timerInterval = setInterval(() => {
+      this.elapsedTime.update(v => v + 1);
+    }, 1000);
 
     try {
       const base64 = this.fileBase64()!;
@@ -282,6 +299,9 @@ export class App {
       }
     } finally {
       this.isProcessing.set(false);
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+      }
     }
   }
 
@@ -309,12 +329,17 @@ export class App {
   }
 
   resetApp() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
     this.selectedFile.set(null);
     this.fileBase64.set(null);
     this.resultHtml.set(null);
     this.error.set(null);
     this.tokenCount.set(0);
     this.progressMessage.set('');
+    this.elapsedTime.set(0);
+    this.isFullscreen.set(false);
   }
 
   downloadHtml() {
