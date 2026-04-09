@@ -1,6 +1,6 @@
 import('./dist/server/server.mjs').then((module) => {
   const app = module.app;
-  const port = process.env['PORT'] || 4000;
+  const port = 3000;
   app.listen(port, (error) => {
     if (error) {
       throw error;
