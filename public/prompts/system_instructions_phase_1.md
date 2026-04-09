@@ -119,163 +119,47 @@ Bạn là **Chuyên gia Tái tạo Tài liệu Kỹ thuật số Nâng cao**. Va
 		*	**Một số mẫu cấu trúc mã SVG chuẩn:**
 			*	Ví dụ 1:
 				```svg
-				<svg viewBox="0 0 500 60" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 500px;">
+				<!-- BẮT BUỘC dùng viewBox và CSS width/max-width để hình ảnh Responsive -->
+				<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 300px;">
 					<defs>
-						<marker id="arrow-right" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-							<path d="M 0 0 L 10 5 L 0 10 z" fill="#000" />
-						</marker>
-						<marker id="arrow-left" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-							<path d="M 10 0 L 0 5 L 10 10 z" fill="#000" />
+						<!-- Chỉ cần định nghĩa 1 marker mũi tên lùi (auto-start-reverse), dùng chung cho cả 2 đầu -->
+						<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+							<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
 						</marker>
 					</defs>
-					<line x1="20" y1="40" x2="480" y2="40" stroke="#000" stroke-width="1.5" marker-end="url(#arrow-right)" marker-start="url(#arrow-left)" />
 					
-					<!-- Ticks and Labels -->
-					<g stroke="#000" stroke-width="1.5" text-anchor="middle" font-family="inherit" font-size="14">
-						<line x1="100" y1="35" x2="100" y2="45" /> <text x="100" y="25">-4</text>
-						<line x1="140" y1="35" x2="140" y2="45" /> <text x="140" y="25">-3</text>
-						<line x1="180" y1="35" x2="180" y2="45" /> <text x="180" y="25">-2</text>
-						<line x1="220" y1="35" x2="220" y2="45" /> <text x="220" y="25">-1</text>
-						<line x1="260" y1="35" x2="260" y2="45" /> <text x="260" y="25">0</text>
-						<line x1="300" y1="35" x2="300" y2="45" /> <text x="300" y="25">1</text>
-						<line x1="340" y1="35" x2="340" y2="45" /> <text x="340" y="25">2</text>
-						<line x1="380" y1="35" x2="380" y2="45" /> <text x="380" y="25">3</text>
-						<line x1="420" y1="35" x2="420" y2="45" /> <text x="420" y="25">4</text>
+					<!-- Trục tọa độ (Gom nhóm để code sạch) -->
+					<g stroke="currentColor" stroke-width="1.2" marker-end="url(#arrow)" marker-start="url(#arrow)">
+						<line x1="10" y1="80" x2="190" y2="80" marker-start="none"/> <!-- Trục hoành (x) -->
+						<line x1="100" y1="110" x2="100" y2="10" marker-start="none"/> <!-- Trục tung (y) -->
 					</g>
+
+					<!-- Vạch chia (Ticks) & Đồ thị chính -->
+					<path d="M 50 20 Q 100 120 150 20" fill="none" stroke="#1d4ed8" stroke-width="2"/> <!-- Đường cong cong -->
+					<line x1="140" y1="77" x2="140" y2="83" stroke="currentColor" stroke-width="1"/> <!-- Mẫu 1 vạch chia -->
+
+					<!-- Chú thích Toán học -->
+					<text x="180" y="95" font-family="inherit" font-size="12" font-style="italic">x</text>
+					<text x="140" y="70" text-anchor="middle" font-size="10">2</text>
+					<text x="160" y="25" fill="#1d4ed8" font-size="12">y = f(x)</text>
 				</svg>
 				```
 			*	Ví dụ 2:
 				```svg
-                <svg viewBox="0 0 200 30" preserveAspectRatio="xMidYMid meet">
-                    <line x1="10" y1="20" x2="190" y2="20" stroke="#000" stroke-width="1" marker-end="url(#arrow-right)" marker-start="url(#arrow-left)" />
-                    <line x1="50" y1="20" x2="150" y2="20" stroke="#000" stroke-width="3" />
-                    <circle cx="50" cy="20" r="4" fill="#fff" stroke="#000" stroke-width="1.5" /> <text x="50" y="12" text-anchor="middle" font-style="italic" font-size="12">a</text>
-                    <circle cx="150" cy="20" r="4" fill="#000" /> <text x="150" y="12" text-anchor="middle" font-style="italic" font-size="12">b</text>
-                </svg>
-				```			
-			*	Ví dụ 3:
-				```svg
-				<svg viewBox="0 0 400 150" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 400px;">
-					<!-- Left Diagram -->
-					<g transform="translate(40, 20)">
-						<!-- A (Horizontal) -->
-						<circle cx="60" cy="80" r="40" fill="url(#horiz)" />
-						
-						<!-- B intersect C (Vertical) -->
-						<clipPath id="clipB2">
-							<circle cx="120" cy="80" r="40" />
-						</clipPath>
-						<circle cx="90" cy="40" r="40" fill="url(#vert)" clip-path="url(#clipB2)" />
-						
-						<circle cx="60" cy="80" r="40" fill="none" stroke="#222" stroke-width="1" />
-						<circle cx="120" cy="80" r="40" fill="none" stroke="#222" stroke-width="1" />
-						<circle cx="90" cy="40" r="40" fill="none" stroke="#222" stroke-width="1" />
-						
-						<text x="20" y="120" font-family="inherit" font-size="16" font-style="italic">A</text>
-						<text x="160" y="120" font-family="inherit" font-size="16" font-style="italic">B</text>
-						<text x="90" y="-5" font-family="inherit" font-size="16" font-style="italic">C</text>
-					</g>
-
-					<!-- Right Diagram -->
-					<g transform="translate(220, 20)">
-						<!-- A U (B intersect C) -->
-						<circle cx="60" cy="80" r="40" fill="#ccc" />
-						<clipPath id="clipB3">
-							<circle cx="120" cy="80" r="40" />
-						</clipPath>
-						<circle cx="90" cy="40" r="40" fill="#ccc" clip-path="url(#clipB3)" />
-						
-						<circle cx="60" cy="80" r="40" fill="none" stroke="#222" stroke-width="1" />
-						<circle cx="120" cy="80" r="40" fill="none" stroke="#222" stroke-width="1" />
-						<circle cx="90" cy="40" r="40" fill="none" stroke="#222" stroke-width="1" />
-						
-						<text x="20" y="120" font-family="inherit" font-size="16" font-style="italic">A</text>
-						<text x="160" y="120" font-family="inherit" font-size="16" font-style="italic">B</text>
-						<text x="90" y="-5" font-family="inherit" font-size="16" font-style="italic">C</text>
-					</g>
+				<svg viewBox="0 0 150 50" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 250px;">
+					<!-- Đoạn thẳng chính -->
+					<line x1="20" y1="25" x2="130" y2="25" stroke="#000" stroke-width="2" />
+					<!-- Nét đứt phụ trợ -->
+					<line x1="75" y1="5" x2="75" y2="45" stroke="#666" stroke-width="1" stroke-dasharray="3,3" />
+					
+					<!-- Điểm (Trắng/Đen) & Nhãn -->
+					<circle cx="20" cy="25" r="3" fill="#fff" stroke="#000" stroke-width="1.5" /> 
+					<text x="20" y="12" text-anchor="middle" font-style="italic" font-size="12">A</text>
+					
+					<circle cx="130" cy="25" r="3" fill="#000" /> 
+					<text x="130" y="12" text-anchor="middle" font-style="italic" font-size="12">B</text>
 				</svg>
 				```	
-			*	Ví dụ 4:
-				```svg
-				<div class="grid-4col" style="text-align: center; align-items: end;">
-					<!-- Figure 1.5(a) -->
-					<div>
-						<svg viewBox="-50 -20 100 120" preserveAspectRatio="xMidYMid meet" class="svg-math">
-							<defs>
-								<marker id="arrow7" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-									<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
-								</marker>
-							</defs>
-							<g stroke="currentColor" stroke-width="1.2" marker-end="url(#arrow7)" marker-start="url(#arrow7)">
-								<line x1="-40" y1="80" x2="40" y2="80" marker-start="none"/> <!-- x axis -->
-								<line x1="0" y1="100" x2="0" y2="-10" marker-start="none"/> <!-- y axis -->
-							</g>
-							<path d="M -35 5 Q 0 160 35 5" fill="none" stroke="currentColor" stroke-width="1.5"/> <!-- Parabola -->
-							<line x1="-40" y1="70" x2="35" y2="20" stroke="currentColor" stroke-width="1.5"/> <!-- Line -->
-							<text x="15" y="40" fill="currentColor" font-size="16" font-style="italic">B</text>
-							<text x="-15" y="60" fill="currentColor" font-size="16" font-style="italic">A</text>
-						</svg>
-						<div>(a)</div>
-					</div>
-					<!-- Figure 1.5(b) -->
-					<div>
-						<svg viewBox="-50 -20 100 120" preserveAspectRatio="xMidYMid meet" class="svg-math">
-							<defs>
-								<marker id="arrow8" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-									<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
-								</marker>
-							</defs>
-							<g stroke="currentColor" stroke-width="0.8" marker-end="url(#arrow8)" marker-start="url(#arrow8)">
-								<line x1="-40" y1="80" x2="40" y2="80" marker-start="none"/> <!-- x axis -->
-								<line x1="0" y1="100" x2="0" y2="-10" marker-start="none"/> <!-- y axis -->
-							</g>
-							<path d="M -35 5 Q 0 160 35 5" fill="none" stroke="currentColor" stroke-width="3"/> <!-- Bold Parabola -->
-							<line x1="-40" y1="70" x2="35" y2="20" stroke="currentColor" stroke-width="3"/> <!-- Bold Line -->
-							<text x="10" y="20" fill="currentColor" font-size="14" font-style="italic">A ∪ B</text>
-						</svg>
-						<div>(b)</div>
-					</div>
-					<!-- Figure 1.5(c) -->
-					<div>
-						<svg viewBox="-50 -20 100 120" preserveAspectRatio="xMidYMid meet" class="svg-math">
-							<defs>
-								<marker id="arrow9" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-									<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
-								</marker>
-							</defs>
-							<g stroke="currentColor" stroke-width="0.8" marker-end="url(#arrow9)" marker-start="url(#arrow9)">
-								<line x1="-40" y1="80" x2="40" y2="80" marker-start="none"/> <!-- x axis -->
-								<line x1="0" y1="100" x2="0" y2="-10" marker-start="none"/> <!-- y axis -->
-							</g>
-							<circle cx="-15.5" cy="52" r="3" fill="currentColor"/> <!-- Intersection point 1 -->
-							<circle cx="21" cy="30" r="3" fill="currentColor"/> <!-- Intersection point 2 -->
-							<text x="10" y="30" fill="currentColor" font-size="14" font-style="italic">A ∩ B</text>
-						</svg>
-						<div>(c)</div>
-					</div>
-					<!-- Figure 1.5(d) -->
-					<div>
-						<svg viewBox="-50 -20 100 120" preserveAspectRatio="xMidYMid meet" class="svg-math">
-							<defs>
-								<marker id="arrow10" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-									<path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
-								</marker>
-							</defs>
-							<g stroke="currentColor" stroke-width="0.8" marker-end="url(#arrow10)" marker-start="url(#arrow10)">
-								<line x1="-40" y1="80" x2="40" y2="80" marker-start="none"/> <!-- x axis -->
-								<line x1="0" y1="100" x2="0" y2="-10" marker-start="none"/> <!-- y axis -->
-							</g>
-							<path d="M -35 5 Q 0 160 35 5" fill="none" stroke="currentColor" stroke-width="3"/> <!-- Bold Parabola -->
-							<!-- Draw holes -->
-							<circle cx="-15.5" cy="52" r="3.5" fill="white" stroke="currentColor" stroke-width="1.5"/>
-							<circle cx="21" cy="30" r="3.5" fill="white" stroke="currentColor" stroke-width="1.5"/>
-							<text x="15" y="20" fill="currentColor" font-size="14" font-style="italic">A − B</text>
-						</svg>
-						<div>(d)</div>
-					</div>
-				</div>
-				<div class="figure-caption">Figure 1.5. Union, intersection, and difference of sets \(A\) and \(B\)</div>
-				```
 		*	Quy tắc An toàn (Fallback): Nếu hình vẽ yêu cầu phối cảnh 3D phức tạp hoặc biểu đồ dữ liệu quá dày đặc, HÃY TỪ BỎ SVG và quay lại sử dụng thẻ `<img>` kèm mô tả ảnh chi tiết để tránh lỗi ảo giác tọa độ.	
 		
 4.  **Xử lý Tài liệu Tham khảo:**
