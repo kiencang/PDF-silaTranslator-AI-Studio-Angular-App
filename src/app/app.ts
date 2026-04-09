@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, Eye, Code, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -35,8 +35,6 @@ export class App {
   readonly CheckCircle2 = CheckCircle2;
   readonly AlertCircle = AlertCircle;
   readonly Loader2 = Loader2;
-  readonly Eye = Eye;
-  readonly Code = Code;
   readonly ArrowDown = ArrowDown;
   readonly RefreshCw = RefreshCw;
   readonly Maximize = Maximize;
@@ -65,7 +63,6 @@ export class App {
   error = signal<string | null>(null);
   
   resultHtml = signal<string | null>(null);
-  viewMode = signal<'preview' | 'code'>('preview');
   isDragging = signal<boolean>(false);
   tokenCount = signal<number>(0);
   isFullscreen = signal<boolean>(false);
@@ -86,32 +83,13 @@ export class App {
     const s = (totalSeconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   });
-  
-  highlightedCode = computed(() => {
-    const html = this.resultHtml();
-    if (!html) return '';
-    
-    let escaped = html
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    escaped = escaped.replace(/(&lt;\/?[a-z0-9]+)(.*?)(\/?&gt;)/gi, (match, p1, p2, p3) => {
-      const tag = `<span class="text-pink-400">${p1}</span>`;
-      const attrs = p2.replace(/([a-z0-9-]+)=(&quot;.*?&quot;|&#39;.*?&#39;)/gi, '<span class="text-indigo-300">$1</span>=<span class="text-emerald-300">$2</span>');
-      const end = `<span class="text-pink-400">${p3}</span>`;
-      return tag + attrs + end;
-    });
-
-    return escaped;
-  });
 
   constructor() {
     this.modeControl.valueChanges.subscribe(val => this.mode.set(val));
     this.temperatureControl.valueChanges.subscribe(val => this.temperature.set(val));
 
     effect(() => {
-      if (this.resultHtml() && this.viewMode() === 'preview') {
+      if (this.resultHtml()) {
         setTimeout(() => this.updateIframe(), 50);
       }
     });

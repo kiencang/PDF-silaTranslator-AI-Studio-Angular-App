@@ -6,7 +6,7 @@
         <div class="bg-indigo-600 text-white p-1.5 rounded-lg">
           <lucide-icon [img]="FileText" class="w-5 h-5" aria-hidden="true"></lucide-icon>
         </div>
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.11</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.13</h1>
       </div>
       <div class="flex items-center gap-4 text-sm text-slate-600">
         <span>Powered by Gemini 3.1 Pro</span>
@@ -238,33 +238,6 @@
             
             @if (resultHtml()) {
               <div class="flex items-center gap-2">
-                <div class="flex bg-slate-200 p-1 rounded-lg mr-2">
-                  <button 
-                    (click)="viewMode.set('preview')"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    [class.bg-white]="viewMode() === 'preview'"
-                    [class.shadow-sm]="viewMode() === 'preview'"
-                    [class.text-slate-900]="viewMode() === 'preview'"
-                    [class.text-slate-600]="viewMode() !== 'preview'"
-                    [class.hover:text-slate-900]="viewMode() !== 'preview'"
-                  >
-                    <lucide-icon [img]="Eye" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
-                    Preview
-                  </button>
-                  <button 
-                    (click)="viewMode.set('code')"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    [class.bg-white]="viewMode() === 'code'"
-                    [class.shadow-sm]="viewMode() === 'code'"
-                    [class.text-slate-900]="viewMode() === 'code'"
-                    [class.text-slate-600]="viewMode() !== 'code'"
-                    [class.hover:text-slate-900]="viewMode() !== 'code'"
-                  >
-                    <lucide-icon [img]="Code" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
-                    Code
-                  </button>
-                </div>
-
                 <button (click)="downloadHtml()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 rounded-md transition-colors flex items-center gap-1.5 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Download HTML">
                   <lucide-icon [img]="Download" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
                   Download
@@ -321,13 +294,7 @@
 
             @if (resultHtml()) {
               <div class="absolute inset-0 overflow-hidden">
-                @if (viewMode() === 'preview') {
-                  <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts" title="Bản xem trước tài liệu đã dịch"></iframe>
-                } @else {
-                  <div class="w-full h-full overflow-auto p-4 bg-slate-900 text-slate-300 font-mono text-sm leading-relaxed">
-                    <pre><code [innerHTML]="highlightedCode()"></code></pre>
-                  </div>
-                }
+                <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts" title="Bản xem trước tài liệu đã dịch"></iframe>
               </div>
             }
           </div>
