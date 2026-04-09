@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -42,6 +42,8 @@ export class App {
   readonly Clock = Clock;
   readonly Info = Info;
   readonly X = X;
+  readonly Search = Search;
+  readonly ExternalLink = ExternalLink;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -72,6 +74,11 @@ export class App {
   toasts = signal<Toast[]>([]);
   private toastIdCounter = 0;
   showResetConfirm = signal<boolean>(false);
+
+  // Search State
+  isSearching = signal<boolean>(false);
+  translatedQuery = signal<string>('');
+  searchQuery = signal<string>('');
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
@@ -394,5 +401,28 @@ export class App {
       URL.revokeObjectURL(url);
       this.showToast('success', 'Đã tải file HTML xuống máy.');
     }
+  }
+
+  async onSearch(query: string) {
+    if (!query.trim() || this.isSearching()) return;
+
+    this.searchQuery.set(query);
+    this.isSearching.set(true);
+    this.translatedQuery.set('');
+
+    try {
+      const result = await this.geminiService.translateSearchQuery(query);
+      this.translatedQuery.set(result);
+    } catch (e: any) {
+      console.error('Lỗi khi dịch từ khóa tìm kiếm', e);
+      this.showToast('error', 'Lỗi khi dịch từ khóa. Vui lòng thử lại.');
+    } finally {
+      this.isSearching.set(false);
+    }
+  }
+
+  closeSearch() {
+    this.translatedQuery.set('');
+    this.searchQuery.set('');
   }
 }
