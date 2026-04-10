@@ -1,12 +1,12 @@
 <div class="min-h-screen bg-slate-50 text-slate-900 font-sans">
   <!-- Header -->
-  <header class="bg-white border-b border-slate-200 relative z-40">
+  <header class="bg-white border-b border-slate-200 relative z-40" [attr.inert]="showResetConfirm() ? true : null">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <div class="bg-indigo-600 text-white p-1.5 rounded-lg">
           <lucide-icon [img]="FileText" class="w-5 h-5" aria-hidden="true"></lucide-icon>
         </div>
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.16</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">PDF silaTranslator Online | v1.0.17</h1>
       </div>
       
       <!-- Search Component -->
@@ -28,17 +28,25 @@
             #searchInput
             [disabled]="isSearching()"
             (keydown.enter)="onSearch(searchInput.value)"
+            aria-label="Tìm kiếm tài liệu trên Google Scholar"
+            role="combobox"
+            [attr.aria-expanded]="translatedQuery() ? 'true' : 'false'"
+            aria-controls="search-results"
             class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-full leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed" 
             placeholder="Nhập từ khóa tiếng Việt để tìm tài liệu..."
           >
           
+          <span class="sr-only" aria-live="polite">
+            {{ isSearching() ? 'Đang dịch từ khóa...' : (translatedQuery() ? 'Đã dịch xong, nhấn Tab để mở kết quả trên Google Scholar' : '') }}
+          </span>
+
           <!-- Search Results Dropdown -->
           @if (translatedQuery()) {
-            <div class="absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200">
+            <div id="search-results" class="absolute top-full right-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200">
               <div class="p-4">
                 <div class="flex justify-between items-start mb-2">
                   <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Từ khóa tiếng Anh:</span>
-                  <button (click)="closeSearch()" class="text-slate-400 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 rounded-md p-0.5">
+                  <button (click)="closeSearch()" aria-label="Đóng kết quả tìm kiếm" class="text-slate-400 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 rounded-md p-0.5">
                     <lucide-icon [img]="X" class="w-4 h-4" aria-hidden="true"></lucide-icon>
                   </button>
                 </div>
@@ -60,7 +68,7 @@
     </div>
   </header>
 
-  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8" [attr.inert]="showResetConfirm() ? true : null">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       
       <!-- Left Column: Controls & Upload -->
@@ -71,16 +79,16 @@
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">1. Tải lên tài liệu cần dịch</h2>
             @if (hasFile() || resultHtml()) {
-              <button (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <button #resetBtn (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <lucide-icon [img]="RefreshCw" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon> Làm mới
               </button>
             }
           </div>
           <div class="p-6">
             <div 
-              role="button"
-              tabindex="0"
-              aria-label="Khu vực tải lên tài liệu. Nhấn Enter hoặc Space để chọn file"
+              [attr.role]="!hasFile() ? 'button' : null"
+              [attr.tabindex]="!hasFile() ? '0' : null"
+              [attr.aria-label]="!hasFile() ? 'Khu vực tải lên tài liệu. Nhấn Enter hoặc Space để chọn file' : null"
               class="border-2 rounded-xl p-8 text-center transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               [class.border-dashed]="!isDragging()"
               [class.border-solid]="isDragging()"
@@ -92,9 +100,9 @@
               (dragover)="onDragOver($event)"
               (dragleave)="onDragLeave($event)"
               (drop)="onDropOverride($event)"
-              (click)="fileInput.click()"
-              (keydown.enter)="fileInput.click()"
-              (keydown.space)="fileInput.click(); $event.preventDefault()"
+              (click)="!hasFile() ? fileInput.click() : null"
+              (keydown.enter)="!hasFile() ? fileInput.click() : null"
+              (keydown.space)="!hasFile() ? fileInput.click() : null; !hasFile() ? $event.preventDefault() : null"
             >
               <input 
                 type="file" 
@@ -168,35 +176,36 @@
             
             <!-- Mode Selection -->
             <div class="space-y-3" [class.opacity-50]="isProcessing()" [class.pointer-events-none]="isProcessing()">
-              <label class="block text-sm font-medium text-slate-700">Chế độ dịch</label>
-              <div class="space-y-2">
+              <label class="block text-sm font-medium text-slate-700" id="mode-group-label">Chế độ dịch</label>
+              <fieldset class="space-y-2" aria-labelledby="mode-group-label">
+                <legend class="sr-only">Chọn chế độ dịch</legend>
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'x_math'"
                        [class.bg-indigo-50]="mode() === 'x_math'">
-                  <input type="radio" name="mode" value="x_math" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="x_math" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-x-math">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu khoa học xã hội</div>
-                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). <strong>Không công thức toán / Không đồ thị toán</strong>.</div>
+                    <div id="desc-x-math" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). <strong>Không công thức toán / Không đồ thị toán</strong>.</div>
                   </div>
                 </label>
 
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'x_svg'"
                        [class.bg-indigo-50]="mode() === 'x_svg'">
-                  <input type="radio" name="mode" value="x_svg" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="x_svg" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-x-svg">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu khoa học nói chung</div>
-                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán nhưng không gồm đồ thị toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
+                    <div id="desc-x-svg" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán nhưng không gồm đồ thị toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
                   </div>
                 </label>
 
                 <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
                        [class.border-indigo-600]="mode() === 'normal'"
                        [class.bg-indigo-50]="mode() === 'normal'">
-                  <input type="radio" name="mode" value="normal" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                  <input type="radio" name="mode" value="normal" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-normal">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu toán chuyên ngành</div>
-                    <div class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán và cả đồ thị toán.</div>
+                    <div id="desc-normal" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán và cả đồ thị toán.</div>
                   </div>
                 </label>                
 
@@ -207,10 +216,10 @@
                          [class.border-indigo-600]="mode() === 'phase1'"
                          [class.ring-1]="mode() === 'phase1'"
                          [class.ring-indigo-600]="mode() === 'phase1'">
-                    <input type="radio" name="mode" value="phase1" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                    <input type="radio" name="mode" value="phase1" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-phase1">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 1: PDF sang HTML (EN)</div>
-                      <div class="text-xs text-slate-600 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
+                      <div id="desc-phase1" class="text-xs text-slate-600 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
                     </div>
                   </label>
 
@@ -224,24 +233,24 @@
                          [class.border-indigo-600]="mode() === 'phase2'"
                          [class.ring-1]="mode() === 'phase2'"
                          [class.ring-indigo-600]="mode() === 'phase2'">
-                    <input type="radio" name="mode" value="phase2" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600">
+                    <input type="radio" name="mode" value="phase2" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-phase2">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Phase 2: HTML (EN) sang HTML (VI)</div>
-                      <div class="text-xs text-slate-600 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
+                      <div id="desc-phase2" class="text-xs text-slate-600 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
                     </div>
                   </label>
                 </div>
-              </div>
+              </fieldset>
             </div>
 
             <!-- Temperature -->
             <div class="space-y-2 pt-2" [class.opacity-50]="isProcessing()" [class.pointer-events-none]="isProcessing()">
               <div class="flex justify-between items-center">
-                <label class="block text-sm font-medium text-slate-700">Temperature</label>
-                <span class="text-xs font-mono text-slate-600">{{ temperature() }}</span>
+                <label for="temp-slider" class="block text-sm font-medium text-slate-700">Temperature</label>
+                <span class="text-xs font-mono text-slate-600" aria-hidden="true">{{ temperature() }}</span>
               </div>
-              <input type="range" min="0.1" max="0.5" step="0.1" [formControl]="temperatureControl" class="w-full accent-indigo-600">
-              <div class="flex justify-between text-xs text-slate-400">
+              <input id="temp-slider" type="range" min="0.1" max="0.5" step="0.1" [formControl]="temperatureControl" class="w-full accent-indigo-600" [attr.aria-valuetext]="'Mức độ sáng tạo: ' + temperature()">
+              <div class="flex justify-between text-xs text-slate-400" aria-hidden="true">
                 <span>Chặt chẽ</span>
                 <span>Sáng tạo</span>
               </div>
@@ -351,7 +360,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-slate-200 mt-8">
+  <footer class="border-t border-slate-200 mt-8" [attr.inert]="showResetConfirm() ? true : null">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-center">
       <p class="text-sm text-slate-600">
         <a href="https://pdf-translator.wpsila.com/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 hover:underline font-medium transition-colors">
@@ -400,7 +409,7 @@
           Bạn có chắc chắn muốn xóa kết quả hiện tại không? Dữ liệu chưa lưu sẽ bị mất.
         </p>
         <div class="flex gap-3">
-          <button (click)="cancelReset()" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400">
+          <button #cancelResetBtn (click)="cancelReset()" class="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400">
             Hủy bỏ
           </button>
           <button (click)="confirmReset()" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">

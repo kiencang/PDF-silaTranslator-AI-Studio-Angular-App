@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
@@ -79,6 +79,9 @@ export class App {
   isSearching = signal<boolean>(false);
   translatedQuery = signal<string>('');
   searchQuery = signal<string>('');
+
+  @ViewChild('cancelResetBtn') cancelResetBtn?: ElementRef<HTMLButtonElement>;
+  @ViewChild('resetBtn') resetBtn?: ElementRef<HTMLButtonElement>;
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
@@ -362,6 +365,9 @@ export class App {
   resetApp() {
     if (this.resultHtml()) {
       this.showResetConfirm.set(true);
+      setTimeout(() => {
+        this.cancelResetBtn?.nativeElement?.focus();
+      }, 50);
     } else {
       this.confirmReset();
     }
@@ -381,10 +387,16 @@ export class App {
     this.isFullscreen.set(false);
     this.showResetConfirm.set(false);
     this.showToast('info', 'Đã làm mới phiên làm việc.');
+    setTimeout(() => {
+      this.resetBtn?.nativeElement?.focus();
+    }, 50);
   }
 
   cancelReset() {
     this.showResetConfirm.set(false);
+    setTimeout(() => {
+      this.resetBtn?.nativeElement?.focus();
+    }, 50);
   }
 
   downloadHtml() {
