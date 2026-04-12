@@ -29,6 +29,24 @@ export class GeminiService {
     return response.totalTokens || 0;
   }
 
+  private checkResponse(response: any): string {
+    const candidate = response.candidates?.[0];
+    if (candidate?.finishReason) {
+      const reason = candidate.finishReason;
+      if (reason === 'RECITATION') {
+        throw new Error('Google Gemini từ chối xử lý file này do chính sách bản quyền (Recitation). Vui lòng sử dụng chế độ Dịch 1 giai đoạn.');
+      } else if (reason === 'SAFETY') {
+        throw new Error('Tài liệu bị từ chối do vi phạm chính sách an toàn của Google (Safety).');
+      }
+    }
+
+    if (!response.text) {
+      throw new Error('Gemini không trả về kết quả (có thể do lỗi hệ thống hoặc bộ lọc). Vui lòng thử lại.');
+    }
+
+    return response.text;
+  }
+
   async translate(
     fileData: string,
     mimeType: string,
@@ -54,7 +72,7 @@ export class GeminiService {
       }
     });
 
-    return response.text || '';
+    return this.checkResponse(response);
   }
 
   async translateHtml(
@@ -76,7 +94,7 @@ export class GeminiService {
       }
     });
 
-    return response.text || '';
+    return this.checkResponse(response);
   }
 
   async translateSearchQuery(query: string): Promise<string> {
