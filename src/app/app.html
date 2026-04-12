@@ -189,7 +189,7 @@
                 </p>
 
                 <ul class="space-y-2">
-                  @for (item of history(); track item.timestamp) {
+                  @for (item of visibleHistory(); track item.timestamp) {
                     <li class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
                       <div class="flex items-center gap-2 overflow-hidden">
                         <lucide-icon [img]="FileText" class="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true"></lucide-icon>
@@ -199,6 +199,18 @@
                     </li>
                   }
                 </ul>
+
+                @if (history().length > 3) {
+                  <button (click)="toggleHistory()" class="w-full mt-2 py-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-md transition-colors focus:outline-none">
+                    @if (isHistoryExpanded()) {
+                      Thu gọn
+                      <lucide-icon [img]="ChevronUp" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
+                    } @else {
+                      Xem thêm {{ history().length - 3 }} file cũ hơn
+                      <lucide-icon [img]="ChevronDown" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
+                    }
+                  </button>
+                }
               </div>
             }
           </div>

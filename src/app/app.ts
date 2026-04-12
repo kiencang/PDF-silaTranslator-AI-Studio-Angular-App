@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, V
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2 } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2, ChevronDown, ChevronUp } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -51,6 +51,8 @@ export class App {
   readonly ExternalLink = ExternalLink;
   readonly HistoryIcon = History;
   readonly Trash2 = Trash2;
+  readonly ChevronDown = ChevronDown;
+  readonly ChevronUp = ChevronUp;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -89,6 +91,7 @@ export class App {
 
   // History State
   history = signal<TranslationHistoryItem[]>([]);
+  isHistoryExpanded = signal<boolean>(false);
 
   @ViewChild('cancelResetBtn') cancelResetBtn?: ElementRef<HTMLButtonElement>;
   @ViewChild('resetBtn') resetBtn?: ElementRef<HTMLButtonElement>;
@@ -97,6 +100,10 @@ export class App {
   hasFile = computed(() => this.selectedFile() !== null);
   canProcess = computed(() => this.hasFile() && !this.isProcessing());
   tokenPercentage = computed(() => Math.min((this.tokenCount() / this.MAX_TOKENS) * 100, 100));
+  visibleHistory = computed(() => {
+    const fullHistory = this.history();
+    return this.isHistoryExpanded() ? fullHistory : fullHistory.slice(0, 3);
+  });
   formattedTime = computed(() => {
     const totalSeconds = this.elapsedTime();
     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -163,6 +170,7 @@ export class App {
 
   clearHistory() {
     this.history.set([]);
+    this.isHistoryExpanded.set(false);
     if (typeof localStorage !== 'undefined') {
       try {
         localStorage.removeItem('sila_translation_history');
@@ -171,6 +179,10 @@ export class App {
         console.error('Failed to clear history', e);
       }
     }
+  }
+
+  toggleHistory() {
+    this.isHistoryExpanded.update(v => !v);
   }
 
   onDragOver(event: DragEvent) {
