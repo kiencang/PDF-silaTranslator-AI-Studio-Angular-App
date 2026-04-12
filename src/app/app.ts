@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2 } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -12,6 +12,11 @@ interface Toast {
   id: number;
   type: 'error' | 'info' | 'success';
   message: string;
+}
+
+interface TranslationHistoryItem {
+  fileName: string;
+  timestamp: number;
 }
 
 @Component({
@@ -44,6 +49,8 @@ export class App {
   readonly X = X;
   readonly Search = Search;
   readonly ExternalLink = ExternalLink;
+  readonly HistoryIcon = History;
+  readonly Trash2 = Trash2;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -80,6 +87,9 @@ export class App {
   translatedQuery = signal<string>('');
   searchQuery = signal<string>('');
 
+  // History State
+  history = signal<TranslationHistoryItem[]>([]);
+
   @ViewChild('cancelResetBtn') cancelResetBtn?: ElementRef<HTMLButtonElement>;
   @ViewChild('resetBtn') resetBtn?: ElementRef<HTMLButtonElement>;
 
@@ -98,6 +108,10 @@ export class App {
     this.modeControl.valueChanges.subscribe(val => this.mode.set(val));
     this.temperatureControl.valueChanges.subscribe(val => this.temperature.set(val));
 
+    afterNextRender(() => {
+      this.loadHistory();
+    });
+
     effect(() => {
       if (this.resultHtml()) {
         setTimeout(() => this.updateIframe(), 50);
@@ -115,6 +129,48 @@ export class App {
 
   removeToast(id: number) {
     this.toasts.update(t => t.filter(toast => toast.id !== id));
+  }
+
+  private loadHistory() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const saved = localStorage.getItem('sila_translation_history');
+      if (saved) {
+        this.history.set(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load history', e);
+    }
+  }
+
+  private addToHistory(fileName: string) {
+    const newItem: TranslationHistoryItem = {
+      fileName,
+      timestamp: Date.now()
+    };
+    this.history.update(current => {
+      const updated = [newItem, ...current].slice(0, 10);
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('sila_translation_history', JSON.stringify(updated));
+        } catch (e) {
+          console.error('Failed to save history', e);
+        }
+      }
+      return updated;
+    });
+  }
+
+  clearHistory() {
+    this.history.set([]);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('sila_translation_history');
+        this.showToast('success', 'Đã xóa lịch sử dịch.');
+      } catch (e) {
+        console.error('Failed to clear history', e);
+      }
+    }
   }
 
   onDragOver(event: DragEvent) {
@@ -323,6 +379,10 @@ export class App {
       } else {
         this.showToast('success', 'Quá trình dịch tài liệu hoàn tất!');
       }
+      
+      // Add to history upon success
+      this.addToHistory(this.selectedFile()?.name || 'Tài liệu không tên');
+      
     } catch (e: any) {
       console.error(e);
       const errorMessage = e.message || '';

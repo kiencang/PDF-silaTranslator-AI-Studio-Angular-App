@@ -8,7 +8,7 @@
         </div>
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 flex items-baseline gap-2">
           PDF silaTranslator Online
-          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.18</span>
+          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.19</span>
         </h1>
       </div>
       
@@ -82,7 +82,7 @@
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">1. Tải lên tài liệu cần dịch</h2>
             @if (hasFile() || resultHtml()) {
-              <button #resetBtn (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors px-2 py-1 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <button #resetBtn (click)="resetApp()" class="text-xs flex items-center gap-1.5 text-slate-600 bg-white border border-slate-200 shadow-sm hover:text-indigo-600 hover:border-indigo-200 transition-colors px-2.5 py-1.5 rounded-md hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <lucide-icon [img]="RefreshCw" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon> Làm mới
               </button>
             }
@@ -164,6 +164,37 @@
               <div class="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-start gap-2" role="alert" aria-live="assertive">
                 <lucide-icon [img]="AlertCircle" class="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true"></lucide-icon>
                 <span>{{ error() }}</span>
+              </div>
+            }
+
+            @if (history().length > 0) {
+              <div class="mt-6 pt-6 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <lucide-icon [img]="HistoryIcon" class="w-4 h-4" aria-hidden="true"></lucide-icon>
+                    Nhật ký dịch gần đây
+                  </div>
+                  <button (click)="clearHistory()" class="text-xs text-slate-400 hover:text-red-600 transition-colors focus:outline-none" title="Xóa lịch sử">
+                    <lucide-icon [img]="Trash2" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
+                  </button>
+                </div>
+                
+                <p class="text-[11px] text-slate-500 mb-3 flex items-start gap-1.5 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" aria-hidden="true"></lucide-icon>
+                  Lịch sử dịch chỉ lưu cục bộ tại trình duyệt của bạn, đảm bảo an toàn và bảo mật tuyệt đối.
+                </p>
+
+                <ul class="space-y-2">
+                  @for (item of history(); track item.timestamp) {
+                    <li class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                      <div class="flex items-center gap-2 overflow-hidden">
+                        <lucide-icon [img]="FileText" class="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true"></lucide-icon>
+                        <span class="text-slate-700 truncate font-medium" [title]="item.fileName">{{ item.fileName }}</span>
+                      </div>
+                      <span class="text-xs text-slate-400 shrink-0 ml-3">{{ item.timestamp | date:'HH:mm - dd/MM/yyyy' }}</span>
+                    </li>
+                  }
+                </ul>
               </div>
             }
           </div>
@@ -266,7 +297,7 @@
             <!-- Action Button -->
             <button 
               (click)="processFile()"
-              [disabled]="!canProcess()"
+              [disabled]="!canProcess() || !!resultHtml()"
               class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed cursor-pointer text-white rounded-2xl font-medium flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               @if (isProcessing()) {
