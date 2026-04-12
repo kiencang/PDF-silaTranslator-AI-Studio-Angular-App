@@ -27,6 +27,7 @@
     "express": "^5.1.0",
     "lucide-angular": "^1.0.0",
     "motion": "^12.23.24",
+    "pdf-lib": "^1.17.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

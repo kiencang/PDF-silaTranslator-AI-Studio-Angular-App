@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2, ChevronDown, ChevronUp } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2, ChevronDown, ChevronUp, Scissors } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { PDFDocument } from 'pdf-lib';
 
 type TranslationMode = 'x_math' | 'x_svg' | 'normal' | 'phase1' | 'phase2';
 
@@ -22,7 +23,7 @@ interface TranslationHistoryItem {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LucideAngularModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +54,7 @@ export class App {
   readonly Trash2 = Trash2;
   readonly ChevronDown = ChevronDown;
   readonly ChevronUp = ChevronUp;
+  readonly Scissors = Scissors;
 
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   readonly MAX_TOKENS = 25000;
@@ -76,6 +78,15 @@ export class App {
   resultHtml = signal<string | null>(null);
   isDragging = signal<boolean>(false);
   tokenCount = signal<number>(0);
+  isCountingTokens = signal<boolean>(false);
+  
+  // PDF Cropping State
+  pdfTotalPages = signal<number>(0);
+  pdfStartPage = signal<number>(1);
+  pdfEndPage = signal<number>(1);
+  croppedFile = signal<File | null>(null);
+  private cropTimeout: any;
+
   isFullscreen = signal<boolean>(false);
   elapsedTime = signal<number>(0);
   private timerInterval: any;
@@ -98,7 +109,7 @@ export class App {
 
   // Computed
   hasFile = computed(() => this.selectedFile() !== null);
-  canProcess = computed(() => this.hasFile() && !this.isProcessing());
+  canProcess = computed(() => this.hasFile() && !this.isProcessing() && !this.isCountingTokens() && this.tokenCount() <= this.MAX_TOKENS);
   tokenPercentage = computed(() => Math.min((this.tokenCount() / this.MAX_TOKENS) * 100, 100));
   visibleHistory = computed(() => {
     const fullHistory = this.history();
@@ -234,7 +245,7 @@ export class App {
     input.value = '';
   }
 
-  private handleFile(file: File) {
+  private async handleFile(file: File) {
     if (file.type !== 'application/pdf') {
       this.showToast('error', 'Vui lòng tải lên tệp PDF.');
       this.selectedFile.set(null);
@@ -253,14 +264,78 @@ export class App {
     this.selectedFile.set(file);
     this.mimeType.set(file.type);
     this.resultHtml.set(null);
+    this.croppedFile.set(null);
+    this.pdfTotalPages.set(0);
+    this.isCountingTokens.set(true);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64String = (reader.result as string).split(',')[1];
-      this.fileBase64.set(base64String);
-      this.checkTokenLimit(base64String, file.type);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const pages = pdfDoc.getPageCount();
+      this.pdfTotalPages.set(pages);
+      this.pdfStartPage.set(1);
+      this.pdfEndPage.set(pages);
+      await this.processPdfCrop();
+    } catch (e) {
+      console.error('Error reading PDF:', e);
+      this.showToast('error', 'Lỗi khi đọc file PDF.');
+      this.isCountingTokens.set(false);
+    }
+  }
+
+  onPageChange() {
+    if (this.cropTimeout) clearTimeout(this.cropTimeout);
+    this.cropTimeout = setTimeout(() => {
+      this.processPdfCrop();
+    }, 500);
+  }
+
+  async processPdfCrop() {
+    this.isCountingTokens.set(true);
+    try {
+      const file = this.selectedFile();
+      if (!file) return;
+
+      let start = Math.max(1, this.pdfStartPage());
+      let end = Math.min(this.pdfTotalPages(), this.pdfEndPage());
+
+      if (start > end) {
+        this.showToast('error', 'Trang bắt đầu không được lớn hơn trang kết thúc.');
+        this.isCountingTokens.set(false);
+        return;
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const originalPdf = await PDFDocument.load(arrayBuffer);
+      const newPdf = await PDFDocument.create();
+
+      const pageIndices = [];
+      for (let i = start - 1; i < end; i++) {
+        pageIndices.push(i);
+      }
+
+      const copiedPages = await newPdf.copyPages(originalPdf, pageIndices);
+      copiedPages.forEach(page => newPdf.addPage(page));
+
+      const pdfBytes = await newPdf.save();
+      const croppedBlob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+      const croppedFileObj = new File([croppedBlob], file.name, { type: 'application/pdf' });
+
+      this.croppedFile.set(croppedFileObj);
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        this.fileBase64.set(base64String);
+        this.checkTokenLimit(base64String, file.type);
+      };
+      reader.readAsDataURL(croppedFileObj);
+
+    } catch (error) {
+      console.error('Error cropping PDF:', error);
+      this.showToast('error', 'Lỗi khi cắt PDF.');
+      this.isCountingTokens.set(false);
+    }
   }
 
   private handleHtmlFile(file: File) {
@@ -286,17 +361,18 @@ export class App {
   }
 
   private async checkTokenLimit(base64String: string, mimeType: string) {
+    this.isCountingTokens.set(true);
     try {
       const tokens = await this.geminiService.countTokens(base64String, mimeType);
       this.tokenCount.set(tokens);
       if (tokens > this.MAX_TOKENS) {
-        this.showToast('error', `Lỗi: Nội dung vượt quá giới hạn 25.000 tokens (${tokens} tokens).`);
-        this.selectedFile.set(null);
-        this.fileBase64.set(null);
+        this.showToast('error', `Lỗi: Nội dung vượt quá giới hạn 25.000 tokens (${tokens} tokens). Vui lòng cắt bớt trang.`);
       }
     } catch (e) {
       console.error('Không thể đếm token', e);
       this.showToast('error', 'Lỗi khi kiểm tra dung lượng tài liệu. Vui lòng thử lại.');
+    } finally {
+      this.isCountingTokens.set(false);
     }
   }
 

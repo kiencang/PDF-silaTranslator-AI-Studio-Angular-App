@@ -6,7 +6,8 @@ import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 })
 export class GeminiService {
   private ai: GoogleGenAI;
-  private readonly MODEL_NAME = 'gemini-3.1-pro-preview';
+  private readonly MODEL_NAME_PRO = 'gemini-3.1-pro-preview';
+  private readonly MODEL_NAME_FLASH = 'gemini-flash-latest';
 
   constructor() {
     // GEMINI_API_KEY is injected via angular.json define
@@ -15,7 +16,7 @@ export class GeminiService {
 
   async countTokens(fileData: string, mimeType: string): Promise<number> {
     const response = await this.ai.models.countTokens({
-      model: this.MODEL_NAME,
+      model: this.MODEL_NAME_FLASH,
       contents: [
         mimeType === 'text/html' ? fileData : {
           inlineData: {
@@ -36,7 +37,7 @@ export class GeminiService {
     temperature: number
   ): Promise<string> {
     const response = await this.ai.models.generateContent({
-      model: this.MODEL_NAME,
+      model: this.MODEL_NAME_PRO,
       contents: [
         {
           inlineData: {
@@ -63,7 +64,7 @@ export class GeminiService {
     temperature: number
   ): Promise<string> {
     const response = await this.ai.models.generateContent({
-      model: this.MODEL_NAME,
+      model: this.MODEL_NAME_PRO,
       contents: [
         htmlContent,
         prompt

@@ -8,7 +8,7 @@
         </div>
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 flex items-baseline gap-2">
           PDF silaTranslator Online
-          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.19</span>
+          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.20</span>
         </h1>
       </div>
       
@@ -138,14 +138,41 @@
                     <p class="text-sm font-medium text-slate-900 truncate max-w-[200px] mx-auto">{{ selectedFile()?.name }}</p>
                     <p class="text-xs text-slate-600 mt-1">{{ (selectedFile()!.size / 1024 / 1024).toFixed(2) }} MB</p>
                   </div>
+
+                  @if (selectedFile()?.type === 'application/pdf' && pdfTotalPages() > 0) {
+                    <div class="w-full max-w-[240px] mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg" (click)="$event.stopPropagation()">
+                      <div class="flex items-center gap-1.5 mb-2 text-slate-700">
+                        <lucide-icon [img]="Scissors" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
+                        <span class="text-xs font-medium">Cắt trang (Tổng: {{ pdfTotalPages() }})</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <div class="flex-1 relative">
+                          <span class="absolute inset-y-0 left-2 flex items-center text-[10px] text-slate-500 font-medium">Từ</span>
+                          <input type="number" [ngModel]="pdfStartPage()" (ngModelChange)="pdfStartPage.set($event); onPageChange()" min="1" [max]="pdfTotalPages()" class="w-full pl-6 pr-1 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white text-center">
+                        </div>
+                        <span class="text-slate-400 text-xs">-</span>
+                        <div class="flex-1 relative">
+                          <span class="absolute inset-y-0 left-2 flex items-center text-[10px] text-slate-500 font-medium">Đến</span>
+                          <input type="number" [ngModel]="pdfEndPage()" (ngModelChange)="pdfEndPage.set($event); onPageChange()" min="1" [max]="pdfTotalPages()" class="w-full pl-8 pr-1 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white text-center">
+                        </div>
+                      </div>
+                    </div>
+                  }
                   
-                  @if (tokenCount() > 0) {
+                  @if (tokenCount() > 0 || isCountingTokens()) {
                     <div class="w-full max-w-[240px] mt-2">
-                      <div class="flex justify-between text-[10px] uppercase tracking-wider font-semibold mb-1.5">
-                        <span class="text-slate-600">Token Usage</span>
-                        <span [class.text-emerald-600]="tokenCount() < 20000" [class.text-amber-500]="tokenCount() >= 20000 && tokenCount() <= 25000" [class.text-red-600]="tokenCount() > 25000">
-                          {{ tokenCount() }} / 25K
+                      <div class="flex justify-between items-center text-[10px] uppercase tracking-wider font-semibold mb-1.5">
+                        <span class="text-slate-600 flex items-center gap-1">
+                          Token Usage
+                          @if (isCountingTokens()) {
+                            <lucide-icon [img]="Loader2" class="w-3 h-3 animate-spin text-indigo-500"></lucide-icon>
+                          }
                         </span>
+                        @if (!isCountingTokens()) {
+                          <span [class.text-emerald-600]="tokenCount() < 20000" [class.text-amber-500]="tokenCount() >= 20000 && tokenCount() <= 25000" [class.text-red-600]="tokenCount() > 25000">
+                            {{ tokenCount() }} / 25K
+                          </span>
+                        }
                       </div>
                       <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                         <div class="h-1.5 rounded-full transition-all duration-700 ease-out"
