@@ -11,3 +11,5 @@ Mã nguồn App dịch file PDF từ Anh sang Việt. Triển khai trên AI Stud
 - Chương trình sử dụng SI/Prompt đã được tối ưu sẵn ở dự án này: https://github.com/kiencang/SI-Prompt-PDF-EV-Translate (v1.3.36)
 
 `build_an_app` được dùng để khởi tạo app lần đầu, chỉ giữ lại để tham khảo (cho người phát triển), không cần dùng lại khi đã có app thực tế. Người dùng cuối không cần quan tâm đến phần này.
+
+Xem thêm Tuyên bố từ chối trách nhiệm: https://github.com/kiencang/PDF-silaTranslator-Online/blob/main/DISCLAIMERS.md
