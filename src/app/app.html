@@ -8,7 +8,7 @@
         </div>
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 flex items-baseline gap-2">
           PDF silaTranslator Online
-          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.28</span>
+          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.29</span>
         </h1>
       </div>
       
@@ -144,7 +144,7 @@
                   </div>
 
                   @if (selectedFile()?.type === 'application/pdf' && pdfTotalPages() > 0) {
-                    <div class="w-full max-w-[240px] mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg" (click)="$event.stopPropagation()">
+                    <div class="w-full max-w-[240px] mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0">
                       <div class="flex items-center gap-1.5 mb-2 text-slate-700">
                         <lucide-icon [img]="Scissors" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
                         <span class="text-xs font-medium">Cắt trang (Tổng: {{ pdfTotalPages() }})</span>
@@ -202,54 +202,13 @@
                 <span>{{ error() }}</span>
               </div>
             }
-
-            @if (history().length > 0) {
-              <div class="mt-6 pt-6 border-t border-slate-100">
-                <div class="flex items-center justify-between mb-3">
-                  <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <lucide-icon [img]="HistoryIcon" class="w-4 h-4" aria-hidden="true"></lucide-icon>
-                    Nhật ký dịch gần đây
-                  </div>
-                  <button (click)="clearHistory()" class="text-xs text-slate-400 hover:text-red-600 transition-colors focus:outline-none" title="Xóa lịch sử">
-                    <lucide-icon [img]="Trash2" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
-                  </button>
-                </div>
-                
-                <p class="text-[11px] text-slate-500 mb-3 flex items-start gap-1.5 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" aria-hidden="true"></lucide-icon>
-                  Lịch sử dịch chỉ lưu cục bộ tại trình duyệt của bạn, đảm bảo an toàn và bảo mật. Ngoài ra chỉ tên file được lưu lại.
-                </p>
-
-                <ul class="space-y-2">
-                  @for (item of visibleHistory(); track item.timestamp) {
-                    <li class="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                      <div class="flex items-center gap-2 overflow-hidden">
-                        <lucide-icon [img]="FileText" class="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true"></lucide-icon>
-                        <span class="text-slate-700 truncate font-medium" [title]="item.fileName">{{ item.fileName }}</span>
-                      </div>
-                      <span class="text-xs text-slate-400 shrink-0 ml-3">{{ item.timestamp | date:'HH:mm - dd/MM/yyyy' }}</span>
-                    </li>
-                  }
-                </ul>
-
-                @if (history().length > 3) {
-                  <button (click)="toggleHistory()" class="w-full mt-2 py-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-md transition-colors focus:outline-none">
-                    @if (isHistoryExpanded()) {
-                      Thu gọn
-                      <lucide-icon [img]="ChevronUp" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
-                    } @else {
-                      Xem thêm {{ history().length - 3 }} file cũ hơn
-                      <lucide-icon [img]="ChevronDown" class="w-3.5 h-3.5" aria-hidden="true"></lucide-icon>
-                    }
-                  </button>
-                }
-              </div>
-            }
           </div>
         </section>
 
         <!-- Configuration Section -->
-        <section class="bg-white rounded-2xl ring-1 ring-slate-900/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+        <section class="bg-white rounded-2xl ring-1 ring-slate-900/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-opacity duration-300"
+                 [class.opacity-50]="isProcessing()" 
+                 [class.pointer-events-none]="isProcessing()">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
             <lucide-icon [img]="Settings" class="w-4 h-4 text-slate-500" aria-hidden="true"></lucide-icon>
             <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">2. Cấu hình</h2>
@@ -257,37 +216,61 @@
           <div class="p-6 space-y-5">
             
             <!-- Mode Selection -->
-            <div class="space-y-3" [class.opacity-50]="isProcessing()" [class.pointer-events-none]="isProcessing()">
-              <label class="block text-sm font-medium text-slate-700" id="mode-group-label">Chế độ dịch</label>
+            <div class="space-y-3">
+              <div class="block text-sm font-medium text-slate-700" id="mode-group-label">Chế độ dịch</div>
               <fieldset class="space-y-2" aria-labelledby="mode-group-label">
                 <legend class="sr-only">Chọn chế độ dịch</legend>
-                <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
+                <label class="flex items-start gap-3 p-3 border rounded-xl transition-colors"
+                       [class.cursor-pointer]="!isHtmlUploaded()"
+                       [class.cursor-not-allowed]="isHtmlUploaded()"
+                       [class.opacity-50]="isHtmlUploaded()"
+                       [class.bg-slate-50]="isHtmlUploaded()"
+                       [class.hover:bg-slate-50]="!isHtmlUploaded()"
                        [class.border-indigo-600]="mode() === 'zero_math'"
                        [class.bg-indigo-50]="mode() === 'zero_math'">
-                  <input type="radio" name="mode" value="zero_math" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-zero-math">
+                  <input type="radio" name="mode" value="zero_math" [formControl]="modeControl" [attr.disabled]="isHtmlUploaded() ? true : null" class="mt-1 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50" aria-describedby="desc-zero-math">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu khoa học xã hội</div>
                     <div id="desc-zero-math" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). <strong>Không công thức toán. Không đồ thị toán</strong>.</div>
+                    @if (isHtmlUploaded()) {
+                      <div class="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1"><lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-icon> Chỉ hỗ trợ file PDF</div>
+                    }
                   </div>
                 </label>
 
-                <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
+                <label class="flex items-start gap-3 p-3 border rounded-xl transition-colors"
+                       [class.cursor-pointer]="!isHtmlUploaded()"
+                       [class.cursor-not-allowed]="isHtmlUploaded()"
+                       [class.opacity-50]="isHtmlUploaded()"
+                       [class.bg-slate-50]="isHtmlUploaded()"
+                       [class.hover:bg-slate-50]="!isHtmlUploaded()"
                        [class.border-indigo-600]="mode() === 'zero_svg'"
                        [class.bg-indigo-50]="mode() === 'zero_svg'">
-                  <input type="radio" name="mode" value="zero_svg" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-zero-svg">
+                  <input type="radio" name="mode" value="zero_svg" [formControl]="modeControl" [attr.disabled]="isHtmlUploaded() ? true : null" class="mt-1 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50" aria-describedby="desc-zero-svg">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu khoa học nói chung</div>
                     <div id="desc-zero-svg" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán nhưng không gồm đồ thị toán phức tạp. <strong>Đa phần các tài liệu khoa học nên chọn tùy chọn này</strong>.</div>
+                    @if (isHtmlUploaded()) {
+                      <div class="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1"><lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-icon> Chỉ hỗ trợ file PDF</div>
+                    }
                   </div>
                 </label>
 
-                <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors hover:bg-slate-50"
+                <label class="flex items-start gap-3 p-3 border rounded-xl transition-colors"
+                       [class.cursor-pointer]="!isHtmlUploaded()"
+                       [class.cursor-not-allowed]="isHtmlUploaded()"
+                       [class.opacity-50]="isHtmlUploaded()"
+                       [class.bg-slate-50]="isHtmlUploaded()"
+                       [class.hover:bg-slate-50]="!isHtmlUploaded()"
                        [class.border-indigo-600]="mode() === 'normal'"
                        [class.bg-indigo-50]="mode() === 'normal'">
-                  <input type="radio" name="mode" value="normal" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-normal">
+                  <input type="radio" name="mode" value="normal" [formControl]="modeControl" [attr.disabled]="isHtmlUploaded() ? true : null" class="mt-1 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50" aria-describedby="desc-normal">
                   <div>
                     <div class="text-sm font-medium text-slate-900">Tài liệu toán chuyên ngành</div>
                     <div id="desc-normal" class="text-xs text-slate-600 mt-0.5">PDF -> HTML (VI). Có công thức toán và cả đồ thị toán.</div>
+                    @if (isHtmlUploaded()) {
+                      <div class="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1"><lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-icon> Chỉ hỗ trợ file PDF</div>
+                    }
                   </div>
                 </label>                
 
@@ -297,8 +280,10 @@
                      [class.border-indigo-600]="isTwoPhaseMode()">
                   
                   <label class="flex items-start gap-3 p-3 cursor-pointer"
-                         (click)="selectTwoPhaseMode()">
-                    <input type="radio" name="main_mode" [checked]="isTwoPhaseMode()" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-two-phase">
+                         (click)="selectTwoPhaseMode()"
+                         (keydown.enter)="selectTwoPhaseMode()"
+                         tabindex="0">
+                    <input type="radio" name="main_mode" [checked]="isTwoPhaseMode()" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-two-phase" tabindex="-1">
                     <div>
                       <div class="text-sm font-medium text-slate-900">Dịch 2 giai đoạn (cho tài liệu bố cục phức tạp)</div>
                       <div id="desc-two-phase" class="text-xs text-slate-600 mt-0.5">Chia quá trình dịch thành 2 bước để đảm bảo <strong>độ chính xác cao nhất</strong>.</div>
@@ -307,14 +292,22 @@
 
                   @if (isTwoPhaseMode()) {
                     <div class="p-3 pt-0 pl-11 space-y-2">
-                      <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors bg-white hover:bg-slate-50"
+                      <label class="flex items-start gap-3 p-3 border rounded-xl transition-colors bg-white"
+                             [class.cursor-pointer]="!isHtmlUploaded()"
+                             [class.cursor-not-allowed]="isHtmlUploaded()"
+                             [class.opacity-50]="isHtmlUploaded()"
+                             [class.bg-slate-50]="isHtmlUploaded()"
+                             [class.hover:bg-slate-50]="!isHtmlUploaded()"
                              [class.border-indigo-600]="mode() === 'phase1'"
                              [class.ring-1]="mode() === 'phase1'"
                              [class.ring-indigo-600]="mode() === 'phase1'">
-                        <input type="radio" name="mode" value="phase1" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-phase1">
+                        <input type="radio" name="mode" value="phase1" [formControl]="modeControl" [attr.disabled]="isHtmlUploaded() ? true : null" class="mt-1 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50" aria-describedby="desc-phase1">
                         <div>
                           <div class="text-sm font-medium text-slate-900">Phase 1: PDF sang HTML (EN)</div>
                           <div id="desc-phase1" class="text-xs text-slate-600 mt-0.5">Trích layout và nội dung sang tiếng Anh.</div>
+                          @if (isHtmlUploaded()) {
+                            <div class="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1"><lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-icon> Chỉ hỗ trợ file PDF</div>
+                          }
                         </div>
                       </label>
 
@@ -322,14 +315,22 @@
                         <lucide-icon [img]="ArrowDown" class="w-5 h-5 text-slate-500" aria-hidden="true"></lucide-icon>
                       </div>
 
-                      <label class="flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors bg-white hover:bg-slate-50"
+                      <label class="flex items-start gap-3 p-3 border rounded-xl transition-colors bg-white"
+                             [class.cursor-pointer]="!isPdfUploaded()"
+                             [class.cursor-not-allowed]="isPdfUploaded()"
+                             [class.opacity-50]="isPdfUploaded()"
+                             [class.bg-slate-50]="isPdfUploaded()"
+                             [class.hover:bg-slate-50]="!isPdfUploaded()"
                              [class.border-indigo-600]="mode() === 'phase2'"
                              [class.ring-1]="mode() === 'phase2'"
                              [class.ring-indigo-600]="mode() === 'phase2'">
-                        <input type="radio" name="mode" value="phase2" [formControl]="modeControl" class="mt-1 text-indigo-600 focus:ring-indigo-600" aria-describedby="desc-phase2">
+                        <input type="radio" name="mode" value="phase2" [formControl]="modeControl" [attr.disabled]="isPdfUploaded() ? true : null" class="mt-1 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50" aria-describedby="desc-phase2">
                         <div>
                           <div class="text-sm font-medium text-slate-900">Phase 2: HTML (EN) sang HTML (VI)</div>
                           <div id="desc-phase2" class="text-xs text-slate-600 mt-0.5">Yêu cầu tải lên file HTML có được từ Phase 1.</div>
+                          @if (isPdfUploaded()) {
+                            <div class="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1"><lucide-icon [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-icon> Chỉ hỗ trợ file HTML</div>
+                          }
                         </div>
                       </label>
                     </div>
@@ -339,7 +340,7 @@
             </div>
 
             <!-- Temperature -->
-            <div class="space-y-2 pt-2" [class.opacity-50]="isProcessing()" [class.pointer-events-none]="isProcessing()">
+            <div class="space-y-2 pt-2">
               <div class="flex justify-between items-center">
                 <label for="temp-slider" class="block text-sm font-medium text-slate-700">Temperature</label>
                 <span class="text-xs font-mono text-slate-600" aria-hidden="true">{{ temperature() }}</span>
@@ -363,7 +364,6 @@
               } @else {
                 <lucide-icon [img]="Play" class="w-5 h-5" aria-hidden="true"></lucide-icon>
                 <span>Bắt đầu ngay</span>
-                <span class="opacity-60 text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono tracking-widest ml-1">{{ isMac() ? '⌘' : 'Ctrl' }} ↵</span>
               }
             </button>
 

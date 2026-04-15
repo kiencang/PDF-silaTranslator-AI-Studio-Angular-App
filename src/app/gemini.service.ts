@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, GenerateContentResponse } from '@google/genai';
 
 @Injectable({
   providedIn: 'root'
@@ -29,7 +29,7 @@ export class GeminiService {
     return response.totalTokens || 0;
   }
 
-  private checkResponse(response: any): string {
+  private checkResponse(response: GenerateContentResponse): string {
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
       const reason = candidate.finishReason;

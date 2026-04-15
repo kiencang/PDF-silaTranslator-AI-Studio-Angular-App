@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, afterNextRender, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
-import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, History, Trash2, ChevronDown, ChevronUp, Scissors, FileEdit } from 'lucide-angular';
+import { LucideAngularModule, UploadCloud, FileText, Settings, Play, Download, CheckCircle2, AlertCircle, Loader2, ArrowDown, Maximize, Minimize, Clock, RefreshCw, Info, X, Search, ExternalLink, Scissors, FileEdit } from 'lucide-angular';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { PDFDocument } from 'pdf-lib';
@@ -13,11 +13,6 @@ interface Toast {
   id: number;
   type: 'error' | 'info' | 'success';
   message: string;
-}
-
-interface TranslationHistoryItem {
-  fileName: string;
-  timestamp: number;
 }
 
 @Component({
@@ -50,10 +45,6 @@ export class App {
   readonly X = X;
   readonly Search = Search;
   readonly ExternalLink = ExternalLink;
-  readonly HistoryIcon = History;
-  readonly Trash2 = Trash2;
-  readonly ChevronDown = ChevronDown;
-  readonly ChevronUp = ChevronUp;
   readonly Scissors = Scissors;
   readonly FileEdit = FileEdit;
 
@@ -88,38 +79,30 @@ export class App {
   pdfStartPage = signal<number>(1);
   pdfEndPage = signal<number>(1);
   croppedFile = signal<File | null>(null);
-  private cropTimeout: any;
+  private cropTimeout: ReturnType<typeof setTimeout> | undefined;
 
   isFullscreen = signal<boolean>(false);
   elapsedTime = signal<number>(0);
-  private timerInterval: any;
+  private timerInterval: ReturnType<typeof setInterval> | undefined;
   
   toasts = signal<Toast[]>([]);
   private toastIdCounter = 0;
   showResetConfirm = signal<boolean>(false);
-  isMac = signal<boolean>(false);
-
   // Search State
   isSearching = signal<boolean>(false);
   translatedQuery = signal<string>('');
   searchQuery = signal<string>('');
 
-  // History State
-  history = signal<TranslationHistoryItem[]>([]);
-  isHistoryExpanded = signal<boolean>(false);
-
   @ViewChild('cancelResetBtn') cancelResetBtn?: ElementRef<HTMLButtonElement>;
   @ViewChild('resetBtn') resetBtn?: ElementRef<HTMLButtonElement>;
 
   // Computed
+  isPdfUploaded = computed(() => this.mimeType() === 'application/pdf');
+  isHtmlUploaded = computed(() => this.mimeType() === 'text/html');
   currentMaxTokens = computed(() => this.mimeType() === 'text/html' ? this.MAX_HTML_TOKENS : this.MAX_PDF_TOKENS);
   hasFile = computed(() => this.selectedFile() !== null);
   canProcess = computed(() => this.hasFile() && !this.isProcessing() && !this.isCountingTokens() && this.tokenCount() <= this.currentMaxTokens());
   tokenPercentage = computed(() => Math.min((this.tokenCount() / this.currentMaxTokens()) * 100, 100));
-  visibleHistory = computed(() => {
-    const fullHistory = this.history();
-    return this.isHistoryExpanded() ? fullHistory : fullHistory.slice(0, 3);
-  });
   formattedTime = computed(() => {
     const totalSeconds = this.elapsedTime();
     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -129,34 +112,15 @@ export class App {
 
   selectTwoPhaseMode() {
     if (!this.isTwoPhaseMode()) {
-      this.modeControl.setValue('phase1');
+      this.modeControl.setValue(this.isHtmlUploaded() ? 'phase2' : 'phase1');
     }
   }
 
   constructor() {
-    if (typeof navigator !== 'undefined') {
-      this.isMac.set(navigator.platform.toUpperCase().indexOf('MAC') >= 0 || navigator.userAgent.toUpperCase().indexOf('MAC') >= 0);
-    }
-
-    if (typeof localStorage !== 'undefined') {
-      const savedMode = localStorage.getItem('sila_preferred_translation_mode') as TranslationMode;
-      if (savedMode && ['zero_math', 'zero_svg', 'normal', 'phase1', 'phase2'].includes(savedMode)) {
-        this.modeControl.setValue(savedMode, { emitEvent: false });
-        this.mode.set(savedMode);
-      }
-    }
-
     this.modeControl.valueChanges.subscribe(val => {
       this.mode.set(val);
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('sila_preferred_translation_mode', val);
-      }
     });
     this.temperatureControl.valueChanges.subscribe(val => this.temperature.set(val));
-
-    afterNextRender(() => {
-      this.loadHistory();
-    });
 
     effect(() => {
       if (this.resultHtml()) {
@@ -175,53 +139,6 @@ export class App {
 
   removeToast(id: number) {
     this.toasts.update(t => t.filter(toast => toast.id !== id));
-  }
-
-  private loadHistory() {
-    if (typeof localStorage === 'undefined') return;
-    try {
-      const saved = localStorage.getItem('sila_translation_history');
-      if (saved) {
-        this.history.set(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error('Failed to load history', e);
-    }
-  }
-
-  private addToHistory(fileName: string) {
-    const newItem: TranslationHistoryItem = {
-      fileName,
-      timestamp: Date.now()
-    };
-    this.history.update(current => {
-      const updated = [newItem, ...current].slice(0, 10);
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem('sila_translation_history', JSON.stringify(updated));
-        } catch (e) {
-          console.error('Failed to save history', e);
-        }
-      }
-      return updated;
-    });
-  }
-
-  clearHistory() {
-    this.history.set([]);
-    this.isHistoryExpanded.set(false);
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.removeItem('sila_translation_history');
-        this.showToast('success', 'Đã xóa lịch sử dịch.');
-      } catch (e) {
-        console.error('Failed to clear history', e);
-      }
-    }
-  }
-
-  toggleHistory() {
-    this.isHistoryExpanded.update(v => !v);
   }
 
   onDragOver(event: DragEvent) {
@@ -324,8 +241,8 @@ export class App {
       const file = this.selectedFile();
       if (!file) return;
 
-      let start = Math.max(1, this.pdfStartPage());
-      let end = Math.min(this.pdfTotalPages(), this.pdfEndPage());
+      const start = Math.max(1, this.pdfStartPage());
+      const end = Math.min(this.pdfTotalPages(), this.pdfEndPage());
 
       if (start > end) {
         this.showToast('error', 'Trang bắt đầu không được lớn hơn trang kết thúc.');
@@ -419,16 +336,6 @@ export class App {
     }
   }
 
-  @HostListener('window:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      if (this.canProcess() && !this.resultHtml() && !this.isProcessing()) {
-        event.preventDefault();
-        this.processFile();
-      }
-    }
-  }
-
   async processFile() {
     if (!this.canProcess() || !this.fileBase64()) return;
 
@@ -507,12 +414,9 @@ export class App {
         this.showToast('success', 'Quá trình dịch tài liệu hoàn tất!');
       }
       
-      // Add to history upon success
-      this.addToHistory(this.selectedFile()?.name || 'Tài liệu không tên');
-      
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      const errorMessage = e.message || '';
+      const errorMessage = e instanceof Error ? e.message : String(e);
       
       if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('quota')) {
         this.showToast('error', 'Lỗi: Hệ thống AI đang quá tải hoặc đã hết lượt sử dụng.');
@@ -566,6 +470,7 @@ export class App {
     }
     this.selectedFile.set(null);
     this.fileBase64.set(null);
+    this.mimeType.set('');
     this.resultHtml.set(null);
     this.error.set(null);
     this.tokenCount.set(0);
@@ -573,6 +478,9 @@ export class App {
     this.elapsedTime.set(0);
     this.isFullscreen.set(false);
     this.showResetConfirm.set(false);
+    
+    this.modeControl.setValue('zero_svg');
+
     this.showToast('info', 'Đã làm mới phiên làm việc.');
     setTimeout(() => {
       this.resetBtn?.nativeElement?.focus();
@@ -612,7 +520,7 @@ export class App {
     try {
       const result = await this.geminiService.translateSearchQuery(query);
       this.translatedQuery.set(result);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Lỗi khi dịch từ khóa tìm kiếm', e);
       this.showToast('error', 'Lỗi khi dịch từ khóa. Vui lòng thử lại.');
     } finally {
