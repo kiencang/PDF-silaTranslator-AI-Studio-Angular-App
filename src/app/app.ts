@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, afterNextRender } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, afterNextRender, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
@@ -97,6 +97,7 @@ export class App {
   toasts = signal<Toast[]>([]);
   private toastIdCounter = 0;
   showResetConfirm = signal<boolean>(false);
+  isMac = signal<boolean>(false);
 
   // Search State
   isSearching = signal<boolean>(false);
@@ -133,6 +134,10 @@ export class App {
   }
 
   constructor() {
+    if (typeof navigator !== 'undefined') {
+      this.isMac.set(navigator.platform.toUpperCase().indexOf('MAC') >= 0 || navigator.userAgent.toUpperCase().indexOf('MAC') >= 0);
+    }
+
     if (typeof localStorage !== 'undefined') {
       const savedMode = localStorage.getItem('sila_preferred_translation_mode') as TranslationMode;
       if (savedMode && ['zero_math', 'zero_svg', 'normal', 'phase1', 'phase2'].includes(savedMode)) {
@@ -411,6 +416,16 @@ export class App {
     } catch (e) {
       console.error(`Không thể tải prompt ${filename}`, e);
       throw new Error(`Không thể tải system instruction: ${filename}`);
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      if (this.canProcess() && !this.resultHtml() && !this.isProcessing()) {
+        event.preventDefault();
+        this.processFile();
+      }
     }
   }
 
