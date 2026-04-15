@@ -57,7 +57,7 @@ export class App {
   readonly Scissors = Scissors;
   readonly FileEdit = FileEdit;
 
-  readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   readonly MAX_PDF_TOKENS = 25000;
   readonly MAX_HTML_TOKENS = 35000;
   private promptCache = new Map<string, string>();
@@ -281,8 +281,8 @@ export class App {
       return;
     }
     
-    if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
-      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 5MB.');
+    if (file.size > this.MAX_FILE_SIZE) { // 10MB limit
+      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 10MB.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
@@ -367,8 +367,8 @@ export class App {
   }
 
   private handleHtmlFile(file: File) {
-    if (file.size > this.MAX_FILE_SIZE) { // 5MB limit
-      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 5MB.');
+    if (file.size > this.MAX_FILE_SIZE) { // 10MB limit
+      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 10MB.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
