@@ -128,6 +128,12 @@ export class App {
 
     this.modeControl.valueChanges.subscribe(val => {
       this.mode.set(val);
+      // Ép Temperature về mặc định khi đổi chế độ
+      if (val === 'phase2') {
+        this.temperatureControl.setValue(0.5);
+      } else {
+        this.temperatureControl.setValue(0.3);
+      }
     });
     this.temperatureControl.valueChanges.subscribe(val => this.temperature.set(val));
 
