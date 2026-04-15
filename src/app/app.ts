@@ -50,6 +50,7 @@ export class App {
   readonly FileEdit = FileEdit;
 
   readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  readonly MAX_FILE_SIZE_HTML = 0.5 * 1024 * 1024; // 500KB
   readonly MAX_PDF_TOKENS = 25000;
   readonly MAX_HTML_TOKENS = 35000;
   private promptCache = new Map<string, string>();
@@ -301,8 +302,8 @@ export class App {
   }
 
   private handleHtmlFile(file: File) {
-    if (file.size > this.MAX_FILE_SIZE) { // 10MB limit
-      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 10MB.');
+    if (file.size > this.MAX_FILE_SIZE_HTML) { // 0.5MB limit
+      this.showToast('error', 'Lỗi: Tệp tải lên vượt quá giới hạn 500KB.');
       this.selectedFile.set(null);
       this.fileBase64.set(null);
       return;
