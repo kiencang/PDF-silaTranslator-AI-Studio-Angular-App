@@ -8,7 +8,7 @@
         </div>
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 flex items-baseline gap-2">
           PDF silaTranslator Online
-          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.29</span>
+          <span class="text-sm font-medium text-slate-400 tracking-normal">v1.0.30</span>
         </h1>
       </div>
       
@@ -448,7 +448,7 @@
 
             @if (resultHtml()) {
               <div class="absolute inset-0 overflow-hidden">
-                <iframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts" title="Bản xem trước tài liệu đã dịch"></iframe>
+                <iframe #previewIframe id="preview-iframe" class="w-full h-full border-0 bg-white" sandbox="allow-scripts" title="Bản xem trước tài liệu đã dịch"></iframe>
               </div>
             }
           </div>

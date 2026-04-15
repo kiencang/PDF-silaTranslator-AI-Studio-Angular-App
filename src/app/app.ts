@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, computed, effect, ViewChild, ElementRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
 import { GeminiService } from './gemini.service';
@@ -26,6 +26,7 @@ interface Toast {
 export class App {
   private geminiService = inject(GeminiService);
   private http = inject(HttpClient);
+  private destroyRef = inject(DestroyRef);
 
   // Icons
   readonly UploadCloud = UploadCloud;
@@ -87,6 +88,7 @@ export class App {
   
   toasts = signal<Toast[]>([]);
   private toastIdCounter = 0;
+  private toastTimeouts = new Set<ReturnType<typeof setTimeout>>();
   showResetConfirm = signal<boolean>(false);
   // Search State
   isSearching = signal<boolean>(false);
@@ -95,6 +97,7 @@ export class App {
 
   @ViewChild('cancelResetBtn') cancelResetBtn?: ElementRef<HTMLButtonElement>;
   @ViewChild('resetBtn') resetBtn?: ElementRef<HTMLButtonElement>;
+  @ViewChild('previewIframe') previewIframe?: ElementRef<HTMLIFrameElement>;
 
   // Computed
   isPdfUploaded = computed(() => this.mimeType() === 'application/pdf');
@@ -117,6 +120,12 @@ export class App {
   }
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.timerInterval) clearInterval(this.timerInterval);
+      if (this.cropTimeout) clearTimeout(this.cropTimeout);
+      this.toastTimeouts.forEach(t => clearTimeout(t));
+    });
+
     this.modeControl.valueChanges.subscribe(val => {
       this.mode.set(val);
     });
@@ -132,9 +141,11 @@ export class App {
   showToast(type: 'error' | 'info' | 'success', message: string) {
     const id = this.toastIdCounter++;
     this.toasts.update(t => [...t, { id, type, message }]);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.removeToast(id);
+      this.toastTimeouts.delete(timeoutId);
     }, 5000);
+    this.toastTimeouts.add(timeoutId);
   }
 
   removeToast(id: number) {
@@ -447,9 +458,8 @@ export class App {
   }
 
   private updateIframe() {
-    const iframe = document.getElementById('preview-iframe') as HTMLIFrameElement;
-    if (iframe && this.resultHtml()) {
-      iframe.srcdoc = this.resultHtml()!;
+    if (this.previewIframe?.nativeElement && this.resultHtml()) {
+      this.previewIframe.nativeElement.srcdoc = this.resultHtml()!;
     }
   }
 
